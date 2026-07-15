@@ -528,7 +528,8 @@
       "date": "2026-05-27"
     }
   ],
-  "security_pin_hash": "25d114d44f1ee498521f51cd12e524e8fd6e67c82a9d21fc29c0bbc7fff457c4",
-  "pin_security_enabled": true,
+  "security_username": "diego",
+  "security_password_hash": "dff3a0c9f2b437e8f0ff9bdbf56d482b:9f72042eacfcb2ee45047c31789b3572a59a120653ca819716cbfa681adfaec0",
+  "security_enabled": true,
   "savingsGoal": 10000
 }

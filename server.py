@@ -149,7 +149,36 @@ INITIAL_DATA = {
     "transactions": DEFAULT_TRANSACTIONS
 }
 
-DEFAULT_PIN_HASH = "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4" # "1234"
+DEFAULT_USER = "admin"
+DEFAULT_PASS_HASH = "vitalisesalt1234:ef09c87d33f145463c01676da372b245575f009594fc95164d60b0630452936b" # "vitalise1234"
+
+def hash_password(password, salt=None):
+    if not salt:
+        salt = os.urandom(16).hex()
+    hashed = hashlib.pbkdf2_hmac(
+        'sha256',
+        password.encode('utf-8'),
+        salt.encode('utf-8'),
+        100000
+    ).hex()
+    return f"{salt}:{hashed}"
+
+def verify_password(stored_password_field, provided_password):
+    try:
+        salt, hashed = stored_password_field.split(":")
+        check = hashlib.pbkdf2_hmac(
+            'sha256',
+            provided_password.encode('utf-8'),
+            salt.encode('utf-8'),
+            100000
+        ).hex()
+        return check == hashed
+    except Exception:
+        return False
+
+def generate_auth_token(username, password_hash):
+    secret = "vitalise_cryptographic_secret_key_2026"
+    return hashlib.sha256(f"{username}:{password_hash}:{secret}".encode('utf-8')).hexdigest()
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
@@ -178,11 +207,14 @@ def load_data():
                 if row:
                     data = row[0]
                     dirty = False
-                    if "security_pin_hash" not in data:
-                        data["security_pin_hash"] = DEFAULT_PIN_HASH
+                    if "security_username" not in data:
+                        data["security_username"] = DEFAULT_USER
                         dirty = True
-                    if "pin_security_enabled" not in data:
-                        data["pin_security_enabled"] = False
+                    if "security_password_hash" not in data:
+                        data["security_password_hash"] = DEFAULT_PASS_HASH
+                        dirty = True
+                    if "security_enabled" not in data:
+                        data["security_enabled"] = data.get("pin_security_enabled", True)
                         dirty = True
                     if dirty:
                         cur.execute(
@@ -202,11 +234,14 @@ def load_data():
             with open(DATA_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 dirty = False
-                if "security_pin_hash" not in data:
-                    data["security_pin_hash"] = DEFAULT_PIN_HASH
+                if "security_username" not in data:
+                    data["security_username"] = DEFAULT_USER
                     dirty = True
-                if "pin_security_enabled" not in data:
-                    data["pin_security_enabled"] = False
+                if "security_password_hash" not in data:
+                    data["security_password_hash"] = DEFAULT_PASS_HASH
+                    dirty = True
+                if "security_enabled" not in data:
+                    data["security_enabled"] = data.get("pin_security_enabled", True)
                     dirty = True
                 if dirty:
                     save_data(data)
@@ -214,8 +249,9 @@ def load_data():
         except Exception:
             pass
     init_data = INITIAL_DATA.copy()
-    init_data["security_pin_hash"] = DEFAULT_PIN_HASH
-    init_data["pin_security_enabled"] = False
+    init_data["security_username"] = DEFAULT_USER
+    init_data["security_password_hash"] = DEFAULT_PASS_HASH
+    init_data["security_enabled"] = True
     save_data(init_data)
     return init_data
 
@@ -517,18 +553,23 @@ HTML_CONTENT = """<!DOCTYPE html>
                 <p class="text-xs text-slate-400 max-w-xs mx-auto">Tus rutinas de alto rendimiento, alimentación y registros financieros se encuentran resguardados de forma segura.</p>
             </div>
             
-            <div class="space-y-3.5">
-                <div class="relative">
-                    <input type="password" id="input-lock-pin" maxlength="12" class="w-full text-center tracking-[0.4em] text-2xl font-mono font-black py-3 px-4 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-[#185FA5] focus:outline-none focus:border-transparent text-white placeholder-slate-750 transition" placeholder="••••" onkeydown="if(event.key === 'Enter') attemptUnlock()" />
+            <div class="space-y-3 text-left">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Nickname / Usuario</label>
+                    <input type="text" id="input-lock-user" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-[#185FA5] focus:outline-none focus:border-transparent text-white text-xs placeholder-slate-700 transition" placeholder="Ingresa tu nickname" onkeydown="if(event.key === 'Enter') attemptUnlock()" />
                 </div>
-                <p id="lock-error-msg" class="text-[11px] font-bold text-rose-500 hidden animate-bounce">⚠️ El PIN de acceso es incorrecto</p>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Contraseña</label>
+                    <input type="password" id="input-lock-pass" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-[#185FA5] focus:outline-none focus:border-transparent text-white text-xs placeholder-slate-700 transition" placeholder="••••••••" onkeydown="if(event.key === 'Enter') attemptUnlock()" />
+                </div>
+                <p id="lock-error-msg" class="text-[11px] font-bold text-rose-500 hidden text-center animate-bounce">⚠️ Usuario o contraseña incorrectos</p>
                 <button onclick="attemptUnlock()" id="btn-unlock-submit" class="w-full py-3 bg-[#185FA5] hover:bg-blue-600 active:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-1.5 uppercase tracking-wider font-display">
-                    <i data-lucide="key-round" class="w-4 h-4"></i> Desbloquear Panel
+                    <i data-lucide="key-round" class="w-4 h-4"></i> Iniciar Sesión
                 </button>
             </div>
             
-            <div class="pt-2 text-[10px] text-slate-500 font-mono">
-                <span>PIN predeterminado: </span><span class="text-slate-400 font-bold">1234</span>
+            <div class="pt-2 text-[10px] text-slate-500 font-mono text-center">
+                <span>Predeterminado: </span><span class="text-slate-400 font-bold">admin / vitalise1234</span>
             </div>
         </div>
     </div>
@@ -1107,32 +1148,42 @@ HTML_CONTENT = """<!DOCTYPE html>
             
             <!-- Status indicator -->
             <div id="sec-status-container" class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-850">
-                <span class="text-xs text-slate-400 font-medium">Bloqueo de PIN:</span>
+                <span class="text-xs text-slate-400 font-medium">Seguridad de Acceso:</span>
                 <span id="sec-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"></span>
             </div>
 
             <!-- Inactive security view -->
             <div id="sec-inactive-view" class="space-y-3.5 hidden">
-                <p class="text-[11px] text-slate-400">El acceso es libre. Activa un PIN de acceso de 4 a 12 dígitos para encriptar visualmente y proteger tus rutinas, dietas y finanzas.</p>
-                <div class="space-y-1 text-xs">
-                    <label class="text-[10px] font-bold text-slate-400 uppercase">Definir PIN de Acceso</label>
-                    <input type="password" id="input-sec-new-pin" maxlength="12" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-200 rounded-lg text-center font-mono tracking-widest text-lg focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="••••" />
+                <p class="text-[11px] text-slate-400">El acceso es libre. Activa credenciales de usuario para proteger tus entrenamientos, dieta y finanzas.</p>
+                <div class="space-y-2 text-xs text-left">
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Nickname / Usuario</label>
+                        <input type="text" id="input-sec-new-user" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ej: admin" />
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Definir Contraseña (mínimo 8 caracteres)</label>
+                        <input type="password" id="input-sec-new-pass" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="••••••••" />
+                    </div>
                 </div>
                 <button onclick="triggerEnableSecurity()" id="btn-sec-enable" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-xs shadow-lg transition flex items-center justify-center gap-1.5">
-                    <i data-lucide="shield-alert" class="w-4 h-4"></i> Activar Seguridad con PIN
+                    <i data-lucide="shield-alert" class="w-4 h-4"></i> Activar Seguridad
                 </button>
             </div>
 
             <!-- Active security view -->
             <div id="sec-active-view" class="space-y-3.5 hidden">
-                <div class="space-y-3 text-xs">
+                <div class="space-y-2 text-xs text-left">
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">PIN Actual</label>
-                        <input type="password" id="input-sec-old-pin" maxlength="12" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-200 rounded-lg text-center font-mono tracking-widest text-lg focus:outline-none focus:ring-1 focus:ring-rose-500" placeholder="••••" />
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Contraseña Actual</label>
+                        <input type="password" id="input-sec-old-pass" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-rose-500" placeholder="••••••••" />
                     </div>
                     <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">Nuevo PIN (Opcional, para cambiar)</label>
-                        <input type="password" id="input-sec-change-pin" maxlength="12" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-200 rounded-lg text-center font-mono tracking-widest text-lg focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="••••" />
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Nuevo Nickname / Usuario (Opcional)</label>
+                        <input type="text" id="input-sec-change-user" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Nuevo usuario" />
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase">Nueva Contraseña (Opcional, mínimo 8 caracteres)</label>
+                        <input type="password" id="input-sec-change-pass" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="••••••••" />
                     </div>
                 </div>
                 
@@ -1140,8 +1191,8 @@ HTML_CONTENT = """<!DOCTYPE html>
                     <button onclick="triggerDisableSecurity()" id="btn-sec-disable" class="flex-1 py-2 bg-rose-950/40 hover:bg-rose-900/50 border border-rose-900 text-rose-300 rounded-lg font-bold text-xs transition flex items-center justify-center gap-1">
                         <i data-lucide="shield-off" class="w-3.5 h-3.5"></i> Desactivar
                     </button>
-                    <button onclick="triggerChangePin()" id="btn-sec-change" class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-xs shadow-lg transition flex items-center justify-center gap-1">
-                        <i data-lucide="key-round" class="w-3.5 h-3.5"></i> Cambiar PIN
+                    <button onclick="triggerChangeCredentials()" id="btn-sec-change" class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-xs shadow-lg transition flex items-center justify-center gap-1">
+                        <i data-lucide="key-round" class="w-3.5 h-3.5"></i> Guardar Cambios
                     </button>
                 </div>
             </div>
@@ -2634,7 +2685,8 @@ HTML_CONTENT = """<!DOCTYPE html>
         }
 
         async function attemptUnlock() {
-            const pin = document.getElementById('input-lock-pin').value;
+            const user = document.getElementById('input-lock-user').value;
+            const pass = document.getElementById('input-lock-pass').value;
             const errDiv = document.getElementById('lock-error-msg');
             errDiv.classList.add('hidden');
             
@@ -2642,27 +2694,33 @@ HTML_CONTENT = """<!DOCTYPE html>
                 const res = await fetch('/api/auth/verify', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ pin: pin })
+                    body: JSON.stringify({ username: user, password: pass })
                 });
                 
                 if (!res.ok) {
-                    throw new Error("PIN Incorrecto");
+                    const data = await res.json();
+                    throw new Error(data.error || "Credenciales Incorrectas");
                 }
                 
                 const data = await res.json();
                 localStorage.setItem('app_auth_token', data.token);
                 
-                // Clear pin field
-                document.getElementById('input-lock-pin').value = '';
+                // Clear inputs
+                document.getElementById('input-lock-user').value = '';
+                document.getElementById('input-lock-pass').value = '';
                 
                 // Initialize app with correct token
                 await init();
             } catch (e) {
+                errDiv.innerText = `⚠️ ${e.message}`;
                 errDiv.classList.remove('hidden');
-                const pinInput = document.getElementById('input-lock-pin');
-                pinInput.classList.add('border-red-500', 'animate-shake');
+                const userField = document.getElementById('input-lock-user');
+                const passField = document.getElementById('input-lock-pass');
+                userField.classList.add('border-red-500', 'animate-shake');
+                passField.classList.add('border-red-500', 'animate-shake');
                 setTimeout(() => {
-                    pinInput.classList.remove('border-red-500', 'animate-shake');
+                    userField.classList.remove('border-red-500', 'animate-shake');
+                    passField.classList.remove('border-red-500', 'animate-shake');
                 }, 500);
             }
         }
@@ -2689,7 +2747,7 @@ HTML_CONTENT = """<!DOCTYPE html>
             } else {
                 badge.innerText = "Inactivo (Acceso Libre)";
                 badge.className = "px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20";
-                hText.innerText = "Configurar PIN";
+                hText.innerText = "Configurar Credenciales";
                 hBtn.classList.remove('text-emerald-400');
                 hBtn.classList.add('text-slate-400');
                 logoutBtn.classList.add('hidden');
@@ -2697,9 +2755,11 @@ HTML_CONTENT = """<!DOCTYPE html>
         }
 
         async function openSecurityModal() {
-            document.getElementById('input-sec-new-pin').value = '';
-            document.getElementById('input-sec-old-pin').value = '';
-            document.getElementById('input-sec-change-pin').value = '';
+            document.getElementById('input-sec-new-user').value = '';
+            document.getElementById('input-sec-new-pass').value = '';
+            document.getElementById('input-sec-old-pass').value = '';
+            document.getElementById('input-sec-change-user').value = '';
+            document.getElementById('input-sec-change-pass').value = '';
             document.getElementById('sec-err').classList.add('hidden');
 
             try {
@@ -2728,14 +2788,21 @@ HTML_CONTENT = """<!DOCTYPE html>
         }
 
         async function triggerEnableSecurity() {
-            const newPin = document.getElementById('input-sec-new-pin').value;
+            const newUser = document.getElementById('input-sec-new-user').value;
+            const newPass = document.getElementById('input-sec-new-pass').value;
             const errDiv = document.getElementById('sec-err');
             const submitBtn = document.getElementById('btn-sec-enable');
 
             errDiv.classList.add('hidden');
 
-            if (newPin.length < 4) {
-                errDiv.innerText = "El PIN debe tener al menos 4 dígitos.";
+            if (!newUser) {
+                errDiv.innerText = "Por favor ingresa un Nickname.";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (newPass.length < 8) {
+                errDiv.innerText = "La contraseña debe tener al menos 8 caracteres.";
                 errDiv.classList.remove('hidden');
                 return;
             }
@@ -2747,37 +2814,37 @@ HTML_CONTENT = """<!DOCTYPE html>
                 const res = await fetch('/api/auth/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'enable', new_pin: newPin })
+                    body: JSON.stringify({ action: 'enable', new_username: newUser, new_password: newPass })
                 });
 
                 const data = await res.json();
                 if (!res.ok) {
-                    throw new Error(data.error || "No se pudo activar el PIN.");
+                    throw new Error(data.error || "No se pudo activar las credenciales.");
                 }
 
                 localStorage.setItem('app_auth_token', data.token);
                 closeSecurityModal();
-                triggerToastAlert("🔒 Seguridad Activada", "Tu panel ahora está protegido por PIN.");
+                triggerToastAlert("🔒 Seguridad Activada", "Tu panel ahora está protegido por credenciales de usuario.");
                 await init();
             } catch (e) {
                 errDiv.innerText = e.message;
                 errDiv.classList.remove('hidden');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i data-lucide="shield-alert" class="w-4 h-4"></i> Activar Seguridad con PIN';
+                submitBtn.innerHTML = '<i data-lucide="shield-alert" class="w-4 h-4"></i> Activar Seguridad';
                 lucide.createIcons();
             }
         }
 
         async function triggerDisableSecurity() {
-            const oldPin = document.getElementById('input-sec-old-pin').value;
+            const oldPass = document.getElementById('input-sec-old-pass').value;
             const errDiv = document.getElementById('sec-err');
             const submitBtn = document.getElementById('btn-sec-disable');
 
             errDiv.classList.add('hidden');
 
-            if (!oldPin) {
-                errDiv.innerText = "Por favor ingresa tu PIN actual para verificar.";
+            if (!oldPass) {
+                errDiv.innerText = "Por favor ingresa tu contraseña actual para verificar.";
                 errDiv.classList.remove('hidden');
                 return;
             }
@@ -2789,7 +2856,7 @@ HTML_CONTENT = """<!DOCTYPE html>
                 const res = await fetch('/api/auth/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'disable', old_pin: oldPin })
+                    body: JSON.stringify({ action: 'disable', old_password: oldPass })
                 });
 
                 const data = await res.json();
@@ -2799,7 +2866,7 @@ HTML_CONTENT = """<!DOCTYPE html>
 
                 localStorage.removeItem('app_auth_token');
                 closeSecurityModal();
-                triggerToastAlert("🔓 Seguridad Desactivada", "Se ha removido el PIN de protección.");
+                triggerToastAlert("🔓 Seguridad Desactivada", "Se ha removido la contraseña de protección.");
                 await init();
             } catch (e) {
                 errDiv.innerText = e.message;
@@ -2811,22 +2878,23 @@ HTML_CONTENT = """<!DOCTYPE html>
             }
         }
 
-        async function triggerChangePin() {
-            const oldPin = document.getElementById('input-sec-old-pin').value;
-            const changePin = document.getElementById('input-sec-change-pin').value;
+        async function triggerChangeCredentials() {
+            const oldPass = document.getElementById('input-sec-old-pass').value;
+            const changeUser = document.getElementById('input-sec-change-user').value;
+            const changePass = document.getElementById('input-sec-change-pass').value;
             const errDiv = document.getElementById('sec-err');
             const submitBtn = document.getElementById('btn-sec-change');
 
             errDiv.classList.add('hidden');
 
-            if (!oldPin) {
-                errDiv.innerText = "Por favor ingresa tu PIN actual.";
+            if (!oldPass) {
+                errDiv.innerText = "Por favor ingresa tu contraseña actual.";
                 errDiv.classList.remove('hidden');
                 return;
             }
 
-            if (changePin.length < 4) {
-                errDiv.innerText = "El nuevo PIN debe tener al menos 4 dígitos.";
+            if (changePass && changePass.length < 8) {
+                errDiv.innerText = "La nueva contraseña debe tener al menos 8 caracteres.";
                 errDiv.classList.remove('hidden');
                 return;
             }
@@ -2838,24 +2906,29 @@ HTML_CONTENT = """<!DOCTYPE html>
                 const res = await fetch('/api/auth/config', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'change', old_pin: oldPin, new_pin: changePin })
+                    body: JSON.stringify({ 
+                        action: 'change', 
+                        old_password: oldPass, 
+                        new_username: changeUser || undefined, 
+                        new_password: changePass || undefined 
+                    })
                 });
 
                 const data = await res.json();
                 if (!res.ok) {
-                    throw new Error(data.error || "No se pudo cambiar el PIN.");
+                    throw new Error(data.error || "No se pudo actualizar las credenciales.");
                 }
 
                 localStorage.setItem('app_auth_token', data.token);
                 closeSecurityModal();
-                triggerToastAlert("🔒 PIN Actualizado", "Tu clave de acceso ha sido cambiada con éxito.");
+                triggerToastAlert("🔒 Credenciales Actualizadas", "Tus datos de acceso han sido actualizados con éxito.");
                 await init();
             } catch (e) {
                 errDiv.innerText = e.message;
                 errDiv.classList.remove('hidden');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i data-lucide="key-round" class="w-3.5 h-3.5"></i> Cambiar PIN';
+                submitBtn.innerHTML = '<i data-lucide="key-round" class="w-3.5 h-3.5"></i> Guardar Cambios';
                 lucide.createIcons();
             }
         }
@@ -2880,14 +2953,16 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
 
     def check_auth(self):
         data = load_data()
-        if not data.get("pin_security_enabled", False):
+        if not data.get("security_enabled", False):
             return True
         auth_header = self.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return False
         token = auth_header.split('Bearer ')[1].strip()
-        stored_hash = data.get("security_pin_hash", DEFAULT_PIN_HASH)
-        return token == stored_hash
+        username = data.get("security_username", DEFAULT_USER)
+        password_hash = data.get("security_password_hash", DEFAULT_PASS_HASH)
+        expected_token = generate_auth_token(username, password_hash)
+        return token == expected_token
 
     def do_HEAD(self):
         if self.path in ['/assets/logo.png', '/favicon.ico']:
@@ -2958,7 +3033,10 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             data = load_data()
-            self.wfile.write(json.dumps({"enabled": data.get("pin_security_enabled", False)}).encode('utf-8'))
+            self.wfile.write(json.dumps({
+                "enabled": data.get("security_enabled", False),
+                "username": data.get("security_username", DEFAULT_USER)
+            }).encode('utf-8'))
         elif self.path == '/api/data':
             if not self.check_auth():
                 self.send_response(401)
@@ -2983,21 +3061,23 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
         if self.path == '/api/auth/verify':
             try:
                 payload = json.loads(post_data.decode('utf-8'))
-                pin = payload.get("pin", "")
-                hashed = hashlib.sha256(pin.encode('utf-8')).hexdigest()
+                username = payload.get("username", "")
+                password = payload.get("password", "")
                 data = load_data()
-                stored_hash = data.get("security_pin_hash", DEFAULT_PIN_HASH)
+                stored_user = data.get("security_username", DEFAULT_USER)
+                stored_hash = data.get("security_password_hash", DEFAULT_PASS_HASH)
                 
-                if hashed == stored_hash:
+                if username == stored_user and verify_password(stored_hash, password):
+                    token = generate_auth_token(stored_user, stored_hash)
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({"success": True, "token": hashed}).encode('utf-8'))
+                    self.wfile.write(json.dumps({"success": True, "token": token}).encode('utf-8'))
                 else:
                     self.send_response(401)
                     self.send_header('Content-Type', 'application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({"success": False, "error": "PIN incorrecto"}).encode('utf-8'))
+                    self.wfile.write(json.dumps({"success": False, "error": "Usuario o contraseña incorrectos"}).encode('utf-8'))
             except Exception as e:
                 self.send_response(400)
                 self.send_header('Content-Type', 'application/json')
@@ -3010,40 +3090,41 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
                 payload = json.loads(post_data.decode('utf-8'))
                 action = payload.get("action") # "enable", "disable", "change"
                 data = load_data()
-                is_currently_enabled = data.get("pin_security_enabled", False)
+                is_currently_enabled = data.get("security_enabled", False)
                 
-                # If currently enabled, we need to verify the old PIN
                 if is_currently_enabled:
-                    old_pin = payload.get("old_pin", "")
-                    hashed_old = hashlib.sha256(old_pin.encode('utf-8')).hexdigest()
-                    stored_hash = data.get("security_pin_hash", DEFAULT_PIN_HASH)
-                    if hashed_old != stored_hash:
+                    old_password = payload.get("old_password", "")
+                    stored_hash = data.get("security_password_hash", DEFAULT_PASS_HASH)
+                    if not verify_password(stored_hash, old_password):
                         self.send_response(400)
                         self.send_header('Content-Type', 'application/json')
                         self.end_headers()
-                        self.wfile.write(json.dumps({"error": "El PIN actual es incorrecto"}).encode('utf-8'))
+                        self.wfile.write(json.dumps({"error": "La contraseña actual es incorrecta"}).encode('utf-8'))
                         return
                 
                 if action == "enable":
-                    new_pin = payload.get("new_pin", "")
-                    if len(new_pin) < 4:
+                    new_user = payload.get("new_username", "admin")
+                    new_password = payload.get("new_password", "")
+                    if len(new_password) < 8:
                         self.send_response(400)
                         self.send_header('Content-Type', 'application/json')
                         self.end_headers()
-                        self.wfile.write(json.dumps({"error": "El PIN debe tener al menos 4 dígitos"}).encode('utf-8'))
+                        self.wfile.write(json.dumps({"error": "La contraseña debe tener al menos 8 caracteres"}).encode('utf-8'))
                         return
-                    hashed_new = hashlib.sha256(new_pin.encode('utf-8')).hexdigest()
-                    data["pin_security_enabled"] = True
-                    data["security_pin_hash"] = hashed_new
+                    hashed_new = hash_password(new_password)
+                    data["security_enabled"] = True
+                    data["security_username"] = new_user
+                    data["security_password_hash"] = hashed_new
                     save_data(data)
+                    token = generate_auth_token(new_user, hashed_new)
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({"success": True, "token": hashed_new}).encode('utf-8'))
+                    self.wfile.write(json.dumps({"success": True, "token": token}).encode('utf-8'))
                     return
                 
                 elif action == "disable":
-                    data["pin_security_enabled"] = False
+                    data["security_enabled"] = False
                     save_data(data)
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/json')
@@ -3052,20 +3133,31 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
                     return
                 
                 elif action == "change":
-                    new_pin = payload.get("new_pin", "")
-                    if len(new_pin) < 4:
-                        self.send_response(400)
-                        self.send_header('Content-Type', 'application/json')
-                        self.end_headers()
-                        self.wfile.write(json.dumps({"error": "El nuevo PIN debe tener al menos 4 dígitos"}).encode('utf-8'))
-                        return
-                    hashed_new = hashlib.sha256(new_pin.encode('utf-8')).hexdigest()
-                    data["security_pin_hash"] = hashed_new
+                    new_user = payload.get("new_username")
+                    new_password = payload.get("new_password")
+                    
+                    if not new_user:
+                        new_user = data.get("security_username", DEFAULT_USER)
+                    
+                    if new_password:
+                        if len(new_password) < 8:
+                            self.send_response(400)
+                            self.send_header('Content-Type', 'application/json')
+                            self.end_headers()
+                            self.wfile.write(json.dumps({"error": "La nueva contraseña debe tener al menos 8 caracteres"}).encode('utf-8'))
+                            return
+                        hashed_new = hash_password(new_password)
+                    else:
+                        hashed_new = data.get("security_password_hash", DEFAULT_PASS_HASH)
+                        
+                    data["security_username"] = new_user
+                    data["security_password_hash"] = hashed_new
                     save_data(data)
+                    token = generate_auth_token(new_user, hashed_new)
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({"success": True, "token": hashed_new}).encode('utf-8'))
+                    self.wfile.write(json.dumps({"success": True, "token": token}).encode('utf-8'))
                     return
             except Exception as e:
                 self.send_response(400)
@@ -3085,10 +3177,10 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
         if self.path == '/api/data':
             try:
                 data = json.loads(post_data.decode('utf-8'))
-                # Prevent overwriting security_pin_hash during regular state saves
                 current_stored_data = load_data()
-                data["security_pin_hash"] = current_stored_data.get("security_pin_hash", DEFAULT_PIN_HASH)
-                data["pin_security_enabled"] = current_stored_data.get("pin_security_enabled", False)
+                data["security_password_hash"] = current_stored_data.get("security_password_hash", DEFAULT_PASS_HASH)
+                data["security_username"] = current_stored_data.get("security_username", DEFAULT_USER)
+                data["security_enabled"] = current_stored_data.get("security_enabled", True)
                 save_data(data)
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
