@@ -1,0 +1,6 @@
+{
+  "name": "Vitalise",
+  "description": "Una aplicación integral para planificar entrenamientos deportivos, organizar el menú alimenticio diario con recetas y llevar un control financiero con análisis inteligente por IA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
