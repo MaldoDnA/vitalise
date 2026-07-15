@@ -528,8 +528,8 @@
       "date": "2026-05-27"
     }
   ],
-  "security_username": "diego",
-  "security_password_hash": "dff3a0c9f2b437e8f0ff9bdbf56d482b:9f72042eacfcb2ee45047c31789b3572a59a120653ca819716cbfa681adfaec0",
+  "security_username": "admin",
+  "security_password_hash": "vitalisesalt1234:ef09c87d33f145463c01676da372b245575f009594fc95164d60b0630452936b",
   "security_enabled": true,
   "savingsGoal": 10000
 }
