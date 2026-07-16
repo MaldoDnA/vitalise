@@ -195,7 +195,24 @@ def get_db_connection():
         print("Database connection error:", e)
         return None
 
-def load_data():
+def load_local_db():
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def save_local_db(db):
+    try:
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(db, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print("Error saving local DB file:", e)
+
+def migrate_database_if_needed():
+    # 1. PostgreSQL DB Migration:
     db_conn = get_db_connection()
     if db_conn:
         try:
@@ -205,78 +222,154 @@ def load_data():
                 cur.execute("SELECT data FROM vitalise_store WHERE id = 'global_state';")
                 row = cur.fetchone()
                 if row:
-                    data = row[0]
-                    dirty = False
-                    if "security_username" not in data:
-                        data["security_username"] = DEFAULT_USER
-                        dirty = True
-                    if "security_password_hash" not in data:
-                        data["security_password_hash"] = DEFAULT_PASS_HASH
-                        dirty = True
-                    if "security_enabled" not in data:
-                        data["security_enabled"] = data.get("pin_security_enabled", True)
-                        dirty = True
-                    if dirty:
-                        cur.execute(
-                            "INSERT INTO vitalise_store (id, data) VALUES ('global_state', %s) "
-                            "ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;",
-                            (json.dumps(data, ensure_ascii=False),)
-                        )
-                        db_conn.commit()
-                    return data
+                    legacy_data = row[0]
+                    username = legacy_data.get("security_username", DEFAULT_USER)
+                    password_hash = legacy_data.get("security_password_hash", DEFAULT_PASS_HASH)
+                    
+                    creds = {
+                        "security_username": username,
+                        "security_password_hash": password_hash,
+                        "security_enabled": True
+                    }
+                    
+                    user_data = legacy_data.copy()
+                    user_data.pop("security_username", None)
+                    user_data.pop("security_password_hash", None)
+                    user_data.pop("security_enabled", None)
+                    user_data.pop("pin_security_enabled", None)
+                    user_data.pop("security_pin_hash", None)
+                    
+                    cur.execute(
+                        "INSERT INTO vitalise_store (id, data) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;",
+                        (f"user_creds_{username}", json.dumps(creds, ensure_ascii=False))
+                    )
+                    cur.execute(
+                        "INSERT INTO vitalise_store (id, data) VALUES (%s, %s) ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;",
+                        (f"user_data_{username}", json.dumps(user_data, ensure_ascii=False))
+                    )
+                    cur.execute("DELETE FROM vitalise_store WHERE id = 'global_state';")
+                    db_conn.commit()
+                    print("PostgreSQL database successfully migrated to multi-user format.")
         except Exception as e:
-            print("Error loading from database, falling back to local file:", e)
+            print("DB migration error:", e)
         finally:
             db_conn.close()
 
+    # 2. Local File Migration:
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                dirty = False
-                if "security_username" not in data:
-                    data["security_username"] = DEFAULT_USER
-                    dirty = True
-                if "security_password_hash" not in data:
-                    data["security_password_hash"] = DEFAULT_PASS_HASH
-                    dirty = True
-                if "security_enabled" not in data:
-                    data["security_enabled"] = data.get("pin_security_enabled", True)
-                    dirty = True
-                if dirty:
-                    save_data(data)
-                return data
-        except Exception:
-            pass
-    init_data = INITIAL_DATA.copy()
-    init_data["security_username"] = DEFAULT_USER
-    init_data["security_password_hash"] = DEFAULT_PASS_HASH
-    init_data["security_enabled"] = True
-    save_data(init_data)
-    return init_data
+                legacy_data = json.load(f)
+            if "routine" in legacy_data:
+                username = legacy_data.get("security_username", DEFAULT_USER)
+                password_hash = legacy_data.get("security_password_hash", DEFAULT_PASS_HASH)
+                
+                creds = {
+                    "security_username": username,
+                    "security_password_hash": password_hash,
+                    "security_enabled": True
+                }
+                
+                user_data = legacy_data.copy()
+                user_data.pop("security_username", None)
+                user_data.pop("security_password_hash", None)
+                user_data.pop("security_enabled", None)
+                user_data.pop("pin_security_enabled", None)
+                user_data.pop("security_pin_hash", None)
+                
+                new_db = {
+                    f"user_creds_{username}": creds,
+                    f"user_data_{username}": user_data
+                }
+                save_local_db(new_db)
+                print("Local app_data.json successfully migrated to multi-user format.")
+        except Exception as e:
+            print("Local file migration error:", e)
 
-def save_data(data):
+# Run migration on start
+migrate_database_if_needed()
+
+def get_user_creds(username):
+    db_conn = get_db_connection()
+    if db_conn:
+        try:
+            with db_conn.cursor() as cur:
+                cur.execute("SELECT data FROM vitalise_store WHERE id = %s;", (f"user_creds_{username}",))
+                row = cur.fetchone()
+                if row:
+                    return row[0]
+        except Exception as e:
+            print("DB error fetching creds:", e)
+        finally:
+            db_conn.close()
+    
+    local_db = load_local_db()
+    return local_db.get(f"user_creds_{username}")
+
+def save_user_creds(username, creds):
     db_conn = get_db_connection()
     if db_conn:
         try:
             with db_conn.cursor() as cur:
                 cur.execute("CREATE TABLE IF NOT EXISTS vitalise_store (id VARCHAR(50) PRIMARY KEY, data JSONB);")
                 cur.execute(
-                    "INSERT INTO vitalise_store (id, data) VALUES ('global_state', %s) "
+                    "INSERT INTO vitalise_store (id, data) VALUES (%s, %s) "
                     "ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;",
-                    (json.dumps(data, ensure_ascii=False),)
+                    (f"user_creds_{username}", json.dumps(creds, ensure_ascii=False))
                 )
                 db_conn.commit()
         except Exception as e:
-            print("Error saving to database:", e)
+            print("DB error saving creds:", e)
         finally:
             db_conn.close()
+            
+    local_db = load_local_db()
+    local_db[f"user_creds_{username}"] = creds
+    save_local_db(local_db)
 
-    try:
-        with open(DATA_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        print("Error saving to local backup file:", e)
+def get_user_data(username):
+    db_conn = get_db_connection()
+    if db_conn:
+        try:
+            with db_conn.cursor() as cur:
+                cur.execute("SELECT data FROM vitalise_store WHERE id = %s;", (f"user_data_{username}",))
+                row = cur.fetchone()
+                if row:
+                    return row[0]
+        except Exception as e:
+            print("DB error fetching data:", e)
+        finally:
+            db_conn.close()
+            
+    local_db = load_local_db()
+    data = local_db.get(f"user_data_{username}")
+    if data:
+        return data
+        
+    init_data = INITIAL_DATA.copy()
+    save_user_data(username, init_data)
+    return init_data
+
+def save_user_data(username, data):
+    db_conn = get_db_connection()
+    if db_conn:
+        try:
+            with db_conn.cursor() as cur:
+                cur.execute("CREATE TABLE IF NOT EXISTS vitalise_store (id VARCHAR(50) PRIMARY KEY, data JSONB);")
+                cur.execute(
+                    "INSERT INTO vitalise_store (id, data) VALUES (%s, %s) "
+                    "ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data;",
+                    (f"user_data_{username}", json.dumps(data, ensure_ascii=False))
+                )
+                db_conn.commit()
+        except Exception as e:
+            print("DB error saving data:", e)
+        finally:
+            db_conn.close()
+            
+    local_db = load_local_db()
+    local_db[f"user_data_{username}"] = data
+    save_local_db(local_db)
 
 def call_gemini_api(prompt):
     api_key = os.environ.get("GEMINI_API_KEY")
@@ -554,7 +647,14 @@ HTML_CONTENT = """<!DOCTYPE html>
                 <p class="text-xs text-slate-400 max-w-xs mx-auto">Tus rutinas de alto rendimiento, alimentación y registros financieros se encuentran resguardados de forma segura.</p>
             </div>
             
-            <div class="space-y-3 text-left">
+            <!-- Tabs -->
+            <div class="flex border-b border-slate-800 text-[10px] font-bold uppercase tracking-wider mb-2">
+                <button onclick="toggleLockTab('login')" id="btn-tab-login" class="flex-1 py-2 text-center border-b-2 border-[#185FA5] text-white transition">Iniciar Sesión</button>
+                <button onclick="toggleLockTab('register')" id="btn-tab-register" class="flex-1 py-2 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition">Registrarse</button>
+            </div>
+
+            <!-- Login View -->
+            <div id="lock-login-view" class="space-y-3 text-left">
                 <div class="space-y-1">
                     <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Nickname / Usuario</label>
                     <input type="text" id="input-lock-user" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-[#185FA5] focus:outline-none focus:border-transparent text-white text-xs placeholder-slate-700 transition" placeholder="Ingresa tu nickname" onkeydown="if(event.key === 'Enter') attemptUnlock()" />
@@ -567,10 +667,25 @@ HTML_CONTENT = """<!DOCTYPE html>
                 <button onclick="attemptUnlock()" id="btn-unlock-submit" class="w-full py-3 bg-[#185FA5] hover:bg-blue-600 active:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-1.5 uppercase tracking-wider font-display">
                     <i data-lucide="key-round" class="w-4 h-4"></i> Iniciar Sesión
                 </button>
+                <div class="pt-2 text-[10px] text-slate-500 font-mono text-center">
+                    <span>Predeterminado: </span><span class="text-slate-400 font-bold">admin / vitalise1234</span>
+                </div>
             </div>
-            
-            <div class="pt-2 text-[10px] text-slate-500 font-mono text-center">
-                <span>Predeterminado: </span><span class="text-slate-400 font-bold">admin / vitalise1234</span>
+
+            <!-- Register View -->
+            <div id="lock-register-view" class="space-y-3 text-left hidden">
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Nuevo Nickname / Usuario</label>
+                    <input type="text" id="input-register-user" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-[#185FA5] focus:outline-none focus:border-transparent text-white text-xs placeholder-slate-700 transition" placeholder="Ej: rider_pro" onkeydown="if(event.key === 'Enter') attemptRegister()" />
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Contraseña (Mínimo 8 caracteres)</label>
+                    <input type="password" id="input-register-pass" class="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl focus:ring-2 focus:ring-[#185FA5] focus:outline-none focus:border-transparent text-white text-xs placeholder-slate-700 transition" placeholder="••••••••" onkeydown="if(event.key === 'Enter') attemptRegister()" />
+                </div>
+                <p id="register-error-msg" class="text-[11px] font-bold text-rose-500 hidden text-center animate-bounce">⚠️ Error de registro</p>
+                <button onclick="attemptRegister()" id="btn-register-submit" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-lg transition flex items-center justify-center gap-1.5 uppercase tracking-wider font-display">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i> Crear Cuenta
+                </button>
             </div>
         </div>
     </div>
@@ -1150,29 +1265,11 @@ HTML_CONTENT = """<!DOCTYPE html>
             <!-- Status indicator -->
             <div id="sec-status-container" class="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-850">
                 <span class="text-xs text-slate-400 font-medium">Seguridad de Acceso:</span>
-                <span id="sec-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"></span>
-            </div>
-
-            <!-- Inactive security view -->
-            <div id="sec-inactive-view" class="space-y-3.5 hidden">
-                <p class="text-[11px] text-slate-400">El acceso es libre. Activa credenciales de usuario para proteger tus entrenamientos, dieta y finanzas.</p>
-                <div class="space-y-2 text-xs text-left">
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">Nickname / Usuario</label>
-                        <input type="text" id="input-sec-new-user" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ej: admin" />
-                    </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase">Definir Contraseña (mínimo 8 caracteres)</label>
-                        <input type="password" id="input-sec-new-pass" class="w-full px-3 py-2 bg-slate-950 border border-slate-800 text-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="••••••••" />
-                    </div>
-                </div>
-                <button onclick="triggerEnableSecurity()" id="btn-sec-enable" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-xs shadow-lg transition flex items-center justify-center gap-1.5">
-                    <i data-lucide="shield-alert" class="w-4 h-4"></i> Activar Seguridad
-                </button>
+                <span id="sec-status-badge" class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Activo</span>
             </div>
 
             <!-- Active security view -->
-            <div id="sec-active-view" class="space-y-3.5 hidden">
+            <div id="sec-active-view" class="space-y-3.5">
                 <div class="space-y-2 text-xs text-left">
                     <div class="space-y-1">
                         <label class="text-[10px] font-bold text-slate-400 uppercase">Contraseña Actual</label>
@@ -1188,12 +1285,9 @@ HTML_CONTENT = """<!DOCTYPE html>
                     </div>
                 </div>
                 
-                <div class="flex gap-2 pt-1">
-                    <button onclick="triggerDisableSecurity()" id="btn-sec-disable" class="flex-1 py-2 bg-rose-950/40 hover:bg-rose-900/50 border border-rose-900 text-rose-300 rounded-lg font-bold text-xs transition flex items-center justify-center gap-1">
-                        <i data-lucide="shield-off" class="w-3.5 h-3.5"></i> Desactivar
-                    </button>
-                    <button onclick="triggerChangeCredentials()" id="btn-sec-change" class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-xs shadow-lg transition flex items-center justify-center gap-1">
-                        <i data-lucide="key-round" class="w-3.5 h-3.5"></i> Guardar Cambios
+                <div class="pt-1">
+                    <button onclick="triggerChangeCredentials()" id="btn-sec-change" class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold text-xs shadow-lg transition flex items-center justify-center gap-1.5">
+                        <i data-lucide="key-round" class="w-4 h-4"></i> Guardar Cambios
                     </button>
                 </div>
             </div>
@@ -2676,6 +2770,7 @@ HTML_CONTENT = """<!DOCTYPE html>
         function showLockScreen() {
             document.getElementById('lock-screen-container').classList.remove('hidden');
             document.getElementById('app-wrapper').classList.add('hidden');
+            toggleLockTab('login'); // Always default to login tab
             lucide.createIcons();
         }
 
@@ -2683,6 +2778,74 @@ HTML_CONTENT = """<!DOCTYPE html>
             document.getElementById('lock-screen-container').classList.add('hidden');
             document.getElementById('app-wrapper').classList.remove('hidden');
             lucide.createIcons();
+        }
+
+        function toggleLockTab(tab) {
+            const loginTab = document.getElementById('btn-tab-login');
+            const registerTab = document.getElementById('btn-tab-register');
+            const loginView = document.getElementById('lock-login-view');
+            const registerView = document.getElementById('lock-register-view');
+
+            if (tab === 'login') {
+                loginTab.className = "flex-1 py-2 text-center border-b-2 border-[#185FA5] text-white transition";
+                registerTab.className = "flex-1 py-2 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
+                loginView.classList.remove('hidden');
+                registerView.classList.add('hidden');
+            } else {
+                loginTab.className = "flex-1 py-2 text-center border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition";
+                registerTab.className = "flex-1 py-2 text-center border-b-2 border-[#185FA5] text-white transition";
+                loginView.classList.add('hidden');
+                registerView.classList.remove('hidden');
+            }
+        }
+
+        async function attemptRegister() {
+            const user = document.getElementById('input-register-user').value.trim();
+            const pass = document.getElementById('input-register-pass').value;
+            const errDiv = document.getElementById('register-error-msg');
+            errDiv.classList.add('hidden');
+
+            if (!user || user.length < 3) {
+                errDiv.innerText = "⚠️ El nickname debe tener al menos 3 caracteres.";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (pass.length < 8) {
+                errDiv.innerText = "⚠️ La contraseña debe tener al menos 8 caracteres.";
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || "No se pudo crear la cuenta.");
+                }
+
+                localStorage.setItem('app_auth_token', data.token);
+                document.getElementById('input-register-user').value = '';
+                document.getElementById('input-register-pass').value = '';
+                triggerToastAlert("🎉 Cuenta Creada", `¡Bienvenido a Vitalise, ${user}!`);
+                await init();
+            } catch (e) {
+                errDiv.innerText = `⚠️ ${e.message}`;
+                errDiv.classList.remove('hidden');
+                const userField = document.getElementById('input-register-user');
+                const passField = document.getElementById('input-register-pass');
+                userField.classList.add('border-red-500', 'animate-shake');
+                passField.classList.add('border-red-500', 'animate-shake');
+                setTimeout(() => {
+                    userField.classList.remove('border-red-500', 'animate-shake');
+                    passField.classList.remove('border-red-500', 'animate-shake');
+                }, 500);
+            }
         }
 
         async function attemptUnlock() {
@@ -2756,27 +2919,12 @@ HTML_CONTENT = """<!DOCTYPE html>
         }
 
         async function openSecurityModal() {
-            document.getElementById('input-sec-new-user').value = '';
-            document.getElementById('input-sec-new-pass').value = '';
             document.getElementById('input-sec-old-pass').value = '';
             document.getElementById('input-sec-change-user').value = '';
             document.getElementById('input-sec-change-pass').value = '';
             document.getElementById('sec-err').classList.add('hidden');
 
             try {
-                const res = await fetch('/api/auth/status');
-                const authStatus = await res.json();
-                
-                updateSecurityStatusUI(authStatus.enabled);
-
-                if (authStatus.enabled) {
-                    document.getElementById('sec-active-view').classList.remove('hidden');
-                    document.getElementById('sec-inactive-view').classList.add('hidden');
-                } else {
-                    document.getElementById('sec-active-view').classList.add('hidden');
-                    document.getElementById('sec-inactive-view').classList.remove('hidden');
-                }
-
                 document.getElementById('security-settings-modal').classList.remove('hidden');
                 lucide.createIcons();
             } catch (e) {
@@ -2786,97 +2934,6 @@ HTML_CONTENT = """<!DOCTYPE html>
 
         function closeSecurityModal() {
             document.getElementById('security-settings-modal').classList.add('hidden');
-        }
-
-        async function triggerEnableSecurity() {
-            const newUser = document.getElementById('input-sec-new-user').value;
-            const newPass = document.getElementById('input-sec-new-pass').value;
-            const errDiv = document.getElementById('sec-err');
-            const submitBtn = document.getElementById('btn-sec-enable');
-
-            errDiv.classList.add('hidden');
-
-            if (!newUser) {
-                errDiv.innerText = "Por favor ingresa un Nickname.";
-                errDiv.classList.remove('hidden');
-                return;
-            }
-
-            if (newPass.length < 8) {
-                errDiv.innerText = "La contraseña debe tener al menos 8 caracteres.";
-                errDiv.classList.remove('hidden');
-                return;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '⚡ Activando...';
-
-            try {
-                const res = await fetch('/api/auth/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'enable', new_username: newUser, new_password: newPass })
-                });
-
-                const data = await res.json();
-                if (!res.ok) {
-                    throw new Error(data.error || "No se pudo activar las credenciales.");
-                }
-
-                localStorage.setItem('app_auth_token', data.token);
-                closeSecurityModal();
-                triggerToastAlert("🔒 Seguridad Activada", "Tu panel ahora está protegido por credenciales de usuario.");
-                await init();
-            } catch (e) {
-                errDiv.innerText = e.message;
-                errDiv.classList.remove('hidden');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i data-lucide="shield-alert" class="w-4 h-4"></i> Activar Seguridad';
-                lucide.createIcons();
-            }
-        }
-
-        async function triggerDisableSecurity() {
-            const oldPass = document.getElementById('input-sec-old-pass').value;
-            const errDiv = document.getElementById('sec-err');
-            const submitBtn = document.getElementById('btn-sec-disable');
-
-            errDiv.classList.add('hidden');
-
-            if (!oldPass) {
-                errDiv.innerText = "Por favor ingresa tu contraseña actual para verificar.";
-                errDiv.classList.remove('hidden');
-                return;
-            }
-
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = 'Desactivando...';
-
-            try {
-                const res = await fetch('/api/auth/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'disable', old_password: oldPass })
-                });
-
-                const data = await res.json();
-                if (!res.ok) {
-                    throw new Error(data.error || "No se pudo desactivar la seguridad.");
-                }
-
-                localStorage.removeItem('app_auth_token');
-                closeSecurityModal();
-                triggerToastAlert("🔓 Seguridad Desactivada", "Se ha removido la contraseña de protección.");
-                await init();
-            } catch (e) {
-                errDiv.innerText = e.message;
-                errDiv.classList.remove('hidden');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i data-lucide="shield-off" class="w-3.5 h-3.5"></i> Desactivar';
-                lucide.createIcons();
-            }
         }
 
         async function triggerChangeCredentials() {
@@ -2906,7 +2963,10 @@ HTML_CONTENT = """<!DOCTYPE html>
             try {
                 const res = await fetch('/api/auth/config', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('app_auth_token')}`
+                    },
                     body: JSON.stringify({ 
                         action: 'change', 
                         old_password: oldPass, 
@@ -2953,17 +3013,26 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
         self.end_headers()
 
     def check_auth(self):
-        data = load_data()
-        if not data.get("security_enabled", False):
-            return True
         auth_header = self.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
-            return False
-        token = auth_header.split('Bearer ')[1].strip()
-        username = data.get("security_username", DEFAULT_USER)
-        password_hash = data.get("security_password_hash", DEFAULT_PASS_HASH)
+            return None
+        token_part = auth_header.split('Bearer ')[1].strip()
+        if ':' not in token_part:
+            return None
+        parts = token_part.split(':')
+        if len(parts) != 2:
+            return None
+        username, token_hash = parts
+        
+        creds = get_user_creds(username)
+        if not creds:
+            return None
+        
+        password_hash = creds.get("security_password_hash")
         expected_token = generate_auth_token(username, password_hash)
-        return token == expected_token
+        if token_hash == expected_token:
+            return username
+        return None
 
     def do_HEAD(self):
         if self.path in ['/assets/logo.png', '/favicon.ico']:
@@ -3033,13 +3102,10 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            data = load_data()
-            self.wfile.write(json.dumps({
-                "enabled": data.get("security_enabled", False),
-                "username": data.get("security_username", DEFAULT_USER)
-            }).encode('utf-8'))
+            self.wfile.write(json.dumps({"enabled": True}).encode('utf-8'))
         elif self.path == '/api/data':
-            if not self.check_auth():
+            username = self.check_auth()
+            if not username:
                 self.send_response(401)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()
@@ -3048,7 +3114,7 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            data = load_data()
+            data = get_user_data(username)
             self.wfile.write(json.dumps(data).encode('utf-8'))
         else:
             self.send_response(404)
@@ -3062,23 +3128,76 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
         if self.path == '/api/auth/verify':
             try:
                 payload = json.loads(post_data.decode('utf-8'))
-                username = payload.get("username", "")
+                username = payload.get("username", "").strip()
                 password = payload.get("password", "")
-                data = load_data()
-                stored_user = data.get("security_username", DEFAULT_USER)
-                stored_hash = data.get("security_password_hash", DEFAULT_PASS_HASH)
                 
-                if username == stored_user and verify_password(stored_hash, password):
-                    token = generate_auth_token(stored_user, stored_hash)
-                    self.send_response(200)
+                creds = get_user_creds(username)
+                if creds:
+                    stored_hash = creds.get("security_password_hash")
+                    if verify_password(stored_hash, password):
+                        token = generate_auth_token(username, stored_hash)
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(json.dumps({"success": True, "token": f"{username}:{token}"}).encode('utf-8'))
+                        return
+                
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": False, "error": "Usuario o contraseña incorrectos"}).encode('utf-8'))
+            except Exception as e:
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode('utf-8'))
+            return
+
+        elif self.path == '/api/auth/register':
+            try:
+                payload = json.loads(post_data.decode('utf-8'))
+                username = payload.get("username", "").strip()
+                password = payload.get("password", "")
+                
+                if not username or len(username) < 3:
+                    self.send_response(400)
                     self.send_header('Content-Type', 'application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({"success": True, "token": token}).encode('utf-8'))
-                else:
-                    self.send_response(401)
+                    self.wfile.write(json.dumps({"error": "El nickname debe tener al menos 3 caracteres"}).encode('utf-8'))
+                    return
+                    
+                if len(password) < 8:
+                    self.send_response(400)
                     self.send_header('Content-Type', 'application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({"success": False, "error": "Usuario o contraseña incorrectos"}).encode('utf-8'))
+                    self.wfile.write(json.dumps({"error": "La contraseña debe tener al menos 8 caracteres"}).encode('utf-8'))
+                    return
+                
+                existing = get_user_creds(username)
+                if existing:
+                    self.send_response(400)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"error": "El nickname ya está registrado"}).encode('utf-8'))
+                    return
+                
+                password_hash = hash_password(password)
+                creds = {
+                    "security_username": username,
+                    "security_password_hash": password_hash,
+                    "security_enabled": True
+                }
+                save_user_creds(username, creds)
+                
+                init_data = INITIAL_DATA.copy()
+                save_user_data(username, init_data)
+                
+                token = generate_auth_token(username, password_hash)
+                
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"success": True, "token": f"{username}:{token}"}).encode('utf-8'))
             except Exception as e:
                 self.send_response(400)
                 self.send_header('Content-Type', 'application/json')
@@ -3088,57 +3207,40 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
 
         elif self.path == '/api/auth/config':
             try:
-                payload = json.loads(post_data.decode('utf-8'))
-                action = payload.get("action") # "enable", "disable", "change"
-                data = load_data()
-                is_currently_enabled = data.get("security_enabled", False)
+                username = self.check_auth()
+                if not username:
+                    self.send_response(401)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"error": "Unauthorized"}).encode('utf-8'))
+                    return
                 
-                if is_currently_enabled:
+                payload = json.loads(post_data.decode('utf-8'))
+                action = payload.get("action")
+                creds = get_user_creds(username)
+                
+                if action == "change":
                     old_password = payload.get("old_password", "")
-                    stored_hash = data.get("security_password_hash", DEFAULT_PASS_HASH)
+                    stored_hash = creds.get("security_password_hash")
                     if not verify_password(stored_hash, old_password):
                         self.send_response(400)
                         self.send_header('Content-Type', 'application/json')
                         self.end_headers()
                         self.wfile.write(json.dumps({"error": "La contraseña actual es incorrecta"}).encode('utf-8'))
                         return
-                
-                if action == "enable":
-                    new_user = payload.get("new_username", "admin")
-                    new_password = payload.get("new_password", "")
-                    if len(new_password) < 8:
-                        self.send_response(400)
-                        self.send_header('Content-Type', 'application/json')
-                        self.end_headers()
-                        self.wfile.write(json.dumps({"error": "La contraseña debe tener al menos 8 caracteres"}).encode('utf-8'))
-                        return
-                    hashed_new = hash_password(new_password)
-                    data["security_enabled"] = True
-                    data["security_username"] = new_user
-                    data["security_password_hash"] = hashed_new
-                    save_data(data)
-                    token = generate_auth_token(new_user, hashed_new)
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"success": True, "token": token}).encode('utf-8'))
-                    return
-                
-                elif action == "disable":
-                    data["security_enabled"] = False
-                    save_data(data)
-                    self.send_response(200)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"success": True}).encode('utf-8'))
-                    return
-                
-                elif action == "change":
-                    new_user = payload.get("new_username")
-                    new_password = payload.get("new_password")
                     
-                    if not new_user:
-                        new_user = data.get("security_username", DEFAULT_USER)
+                    new_user = payload.get("new_username", "").strip()
+                    new_password = payload.get("new_password", "")
+                    
+                    if new_user and new_user != username:
+                        if get_user_creds(new_user):
+                            self.send_response(400)
+                            self.send_header('Content-Type', 'application/json')
+                            self.end_headers()
+                            self.wfile.write(json.dumps({"error": "El nuevo nickname ya está en uso"}).encode('utf-8'))
+                            return
+                    else:
+                        new_user = username
                     
                     if new_password:
                         if len(new_password) < 8:
@@ -3149,16 +3251,43 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
                             return
                         hashed_new = hash_password(new_password)
                     else:
-                        hashed_new = data.get("security_password_hash", DEFAULT_PASS_HASH)
+                        hashed_new = stored_hash
+                    
+                    new_creds = {
+                        "security_username": new_user,
+                        "security_password_hash": hashed_new,
+                        "security_enabled": True
+                    }
+                    
+                    if new_user != username:
+                        user_data = get_user_data(username)
+                        save_user_creds(new_user, new_creds)
+                        save_user_data(new_user, user_data)
                         
-                    data["security_username"] = new_user
-                    data["security_password_hash"] = hashed_new
-                    save_data(data)
+                        db_conn = get_db_connection()
+                        if db_conn:
+                            try:
+                                with db_conn.cursor() as cur:
+                                    cur.execute("DELETE FROM vitalise_store WHERE id = %s;", (f"user_creds_{username}",))
+                                    cur.execute("DELETE FROM vitalise_store WHERE id = %s;", (f"user_data_{username}",))
+                                    db_conn.commit()
+                            except Exception as e:
+                                print("DB error deleting old user rows:", e)
+                            finally:
+                                db_conn.close()
+                                
+                        local_db = load_local_db()
+                        local_db.pop(f"user_creds_{username}", None)
+                        local_db.pop(f"user_data_{username}", None)
+                        save_local_db(local_db)
+                    else:
+                        save_user_creds(username, new_creds)
+                        
                     token = generate_auth_token(new_user, hashed_new)
                     self.send_response(200)
                     self.send_header('Content-Type', 'application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({"success": True, "token": token}).encode('utf-8'))
+                    self.wfile.write(json.dumps({"success": True, "token": f"{new_user}:{token}"}).encode('utf-8'))
                     return
             except Exception as e:
                 self.send_response(400)
@@ -3168,7 +3297,8 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
             return
 
         # Secure endpoints:
-        if not self.check_auth():
+        username = self.check_auth()
+        if not username:
             self.send_response(401)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
@@ -3178,11 +3308,7 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
         if self.path == '/api/data':
             try:
                 data = json.loads(post_data.decode('utf-8'))
-                current_stored_data = load_data()
-                data["security_password_hash"] = current_stored_data.get("security_password_hash", DEFAULT_PASS_HASH)
-                data["security_username"] = current_stored_data.get("security_username", DEFAULT_USER)
-                data["security_enabled"] = current_stored_data.get("security_enabled", True)
-                save_data(data)
+                save_user_data(username, data)
                 self.send_response(200)
                 self.send_header('Content-Type', 'application/json')
                 self.end_headers()

@@ -1,535 +1,539 @@
 {
-  "routine": {
-    "objective": "Rendimiento y Enduro Profesional",
-    "level": "Avanzado",
-    "days": [
-      {
-        "id": "day-0",
-        "label": "Lun",
-        "name": "Lunes",
-        "title": "Fuerza tren superior",
-        "focus": "Tracción + empuje + grip",
-        "warmup": "5 min: band pull-apart, rotación torácica, dead hang 3x10s",
-        "cool": "Estiramiento pecho y hombro: 5 min",
-        "completed": false,
-        "trainingTime": "08:00",
-        "exercises": [
-          {
-            "id": "ex-0-1",
-            "name": "Dominadas neutras",
-            "sets": "5 x máx",
-            "detail": "Pausa 1s arriba. Baja lento.",
-            "why": "Fuerza de tracción = control del manillar",
-            "completed": false
-          },
-          {
-            "id": "ex-0-2",
-            "name": "Remo Pendlay",
-            "sets": "4 x 8",
-            "detail": "Barra al ombligo, explota al subir.",
-            "why": "Postura de ataque: dorsal + romboides",
-            "completed": false
-          },
-          {
-            "id": "ex-0-3",
-            "name": "Farmer carry pesado",
-            "sets": "5 x 40m",
-            "detail": "Paso firme sin balanceo.",
-            "why": "Grip y resistencia para enduro largo",
-            "completed": false
-          }
-        ]
-      },
-      {
-        "id": "day-1",
-        "label": "Mar",
-        "name": "Martes",
-        "title": "Core antirotacional",
-        "focus": "Estabilidad con TRX y Pesos libres",
-        "warmup": "5 min: cat-cow, glute bridge, plancha frontal",
-        "cool": "Pigeon stretch 2 min por lado",
-        "completed": false,
-        "trainingTime": "18:00",
-        "exercises": [
-          {
-            "id": "ex-1-1",
-            "name": "Kettlebell drag en plancha",
-            "sets": "4 x 8/lado",
-            "detail": "Plancha estricta sin girar cadera.",
-            "why": "Core antirotacional extremo para dominar inercias",
-            "completed": false
-          },
-          {
-            "id": "ex-1-2",
-            "name": "Sierra en TRX",
-            "sets": "4 x 12",
-            "detail": "Posición de plancha. Empuja cuerpo atrás.",
-            "why": "Evita extensión lumbar en saltos de moto",
-            "completed": false
-          }
-        ]
-      },
-      {
-        "id": "day-2",
-        "label": "Mié",
-        "name": "Miércoles",
-        "title": "Potencia piernas",
-        "focus": "Fuerza unilateral explosiva",
-        "warmup": "Sentadilla goblet, saltos suaves",
-        "cool": "Piramidal, cuádriceps en pie",
-        "completed": false,
-        "trainingTime": "08:15",
-        "exercises": [
-          {
-            "id": "ex-2-1",
-            "name": "Sentadilla búlgara",
-            "sets": "5 x 8/lado",
-            "detail": "Baja en 3 segundos controlados.",
-            "why": "Posición de pie asimétrica en las estriberas",
-            "completed": false
-          },
-          {
-            "id": "ex-2-2",
-            "name": "Hip thrust",
-            "sets": "4 x 12",
-            "detail": "Pausa de 2 segundos arriba apretando.",
-            "why": "Motor principal al ir de pie sobre baches",
-            "completed": false
-          }
-        ]
-      },
-      {
-        "id": "day-3",
-        "label": "Jue",
-        "name": "Jueves",
-        "title": "Descanso activo",
-        "focus": "Recuperación de tejidos",
-        "warmup": "",
-        "cool": "",
-        "completed": false,
-        "trainingTime": "10:00",
-        "exercises": [
-          {
-            "id": "ex-3-1",
-            "name": "Foam roller completo",
-            "sets": "12 min",
-            "detail": "Cuádriceps, glúteos y dorsal.",
-            "why": "Liberar tensión muscular acumulada",
-            "completed": false
-          },
-          {
-            "id": "ex-3-2",
-            "name": "Box breathing",
-            "sets": "5 min",
-            "detail": "Inhala 4s, retén 4s, exhala 4s, retén 4s.",
-            "why": "Recuperación del sistema nervioso central",
-            "completed": false
-          }
-        ]
-      },
-      {
-        "id": "day-4",
-        "label": "Vie",
-        "name": "Viernes",
-        "title": "Core dinámico",
-        "focus": "Superficies inestables",
-        "warmup": "Movilidad torácica, rotación con palo",
-        "cool": "Estiramiento flexor de cadera",
-        "completed": false,
-        "trainingTime": "17:30",
-        "exercises": [
-          {
-            "id": "ex-4-1",
-            "name": "Landmine press",
-            "sets": "4 x 10/lado",
-            "detail": "Empuje diagonal de pie a un brazo.",
-            "why": "Estabilidad asimétrica en el manillar",
-            "completed": false
-          },
-          {
-            "id": "ex-4-2",
-            "name": "Suitcase carry",
-            "sets": "4 x 40m/lado",
-            "detail": "Carga a un solo lado. Torso vertical.",
-            "why": "Control de inercias laterales al tumbar",
-            "completed": false
-          }
-        ]
-      },
-      {
-        "id": "day-5",
-        "label": "Sáb",
-        "name": "Sábado",
-        "title": "Práctica en Moto",
-        "focus": "Técnica y resistencia específica",
-        "warmup": "Movilidad general antes de casco (muñecas, cuello)",
-        "cool": "Hidratación profunda, estiramiento antebrazos",
-        "completed": false,
-        "trainingTime": "09:30",
-        "exercises": [
-          {
-            "id": "ex-5-1",
-            "name": "Drills de equilibrio",
-            "sets": "20 min",
-            "detail": "Concentración en postura y control de embrague.",
-            "why": "Base del control y balance a baja velocidad",
-            "completed": false
-          },
-          {
-            "id": "ex-5-2",
-            "name": "Manga de resistencia",
-            "sets": "40 min",
-            "detail": "80% de pulsaciones fluidas.",
-            "why": "Simula el esfuerzo continuo de carrera o ruta",
-            "completed": false
-          }
-        ]
-      },
-      {
-        "id": "day-6",
-        "label": "Dom",
-        "name": "Domingo",
-        "title": "Recuperación activa",
-        "focus": "Regeneración y movilidad",
-        "warmup": "Paseo muy suave o caminata",
-        "cool": "Preparación del equipo para la semana",
-        "completed": false,
-        "trainingTime": "10:30",
-        "exercises": [
-          {
-            "id": "ex-6-1",
-            "name": "Yoga para riders",
-            "sets": "15 min",
-            "detail": "Perro boca abajo, postura de niño.",
-            "why": "Revierte postura encogida al ir en moto",
-            "completed": false
-          }
-        ]
-      }
-    ]
+  "user_creds_admin": {
+    "security_username": "admin",
+    "security_password_hash": "vitalisesalt1234:ef09c87d33f145463c01676da372b245575f009594fc95164d60b0630452936b",
+    "security_enabled": true
   },
-  "meals": {
-    "Lunes": {
-      "desayuno": {
-        "id": "d-Lunes",
-        "name": "Avena caliente con frutos rojos y almendras",
-        "calories": 350,
-        "protein": 12,
-        "carbs": 55,
-        "fat": 8,
-        "completed": false
+  "user_data_admin": {
+    "routine": {
+      "objective": "Rendimiento y Enduro Profesional",
+      "level": "Avanzado",
+      "days": [
+        {
+          "id": "day-0",
+          "label": "Lun",
+          "name": "Lunes",
+          "title": "Fuerza tren superior",
+          "focus": "Tracción + empuje + grip",
+          "warmup": "5 min: band pull-apart, rotación torácica, dead hang 3x10s",
+          "cool": "Estiramiento pecho y hombro: 5 min",
+          "completed": false,
+          "trainingTime": "08:00",
+          "exercises": [
+            {
+              "id": "ex-0-1",
+              "name": "Dominadas neutras",
+              "sets": "5 x máx",
+              "detail": "Pausa 1s arriba. Baja lento.",
+              "why": "Fuerza de tracción = control del manillar",
+              "completed": false
+            },
+            {
+              "id": "ex-0-2",
+              "name": "Remo Pendlay",
+              "sets": "4 x 8",
+              "detail": "Barra al ombligo, explota al subir.",
+              "why": "Postura de ataque: dorsal + romboides",
+              "completed": false
+            },
+            {
+              "id": "ex-0-3",
+              "name": "Farmer carry pesado",
+              "sets": "5 x 40m",
+              "detail": "Paso firme sin balanceo.",
+              "why": "Grip y resistencia para enduro largo",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "day-1",
+          "label": "Mar",
+          "name": "Martes",
+          "title": "Core antirotacional",
+          "focus": "Estabilidad con TRX y Pesos libres",
+          "warmup": "5 min: cat-cow, glute bridge, plancha frontal",
+          "cool": "Pigeon stretch 2 min por lado",
+          "completed": false,
+          "trainingTime": "18:00",
+          "exercises": [
+            {
+              "id": "ex-1-1",
+              "name": "Kettlebell drag en plancha",
+              "sets": "4 x 8/lado",
+              "detail": "Plancha estricta sin girar cadera.",
+              "why": "Core antirotacional extremo para dominar inercias",
+              "completed": false
+            },
+            {
+              "id": "ex-1-2",
+              "name": "Sierra en TRX",
+              "sets": "4 x 12",
+              "detail": "Posición de plancha. Empuja cuerpo atrás.",
+              "why": "Evita extensión lumbar en saltos de moto",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "day-2",
+          "label": "Mié",
+          "name": "Miércoles",
+          "title": "Potencia piernas",
+          "focus": "Fuerza unilateral explosiva",
+          "warmup": "Sentadilla goblet, saltos suaves",
+          "cool": "Piramidal, cuádriceps en pie",
+          "completed": false,
+          "trainingTime": "08:15",
+          "exercises": [
+            {
+              "id": "ex-2-1",
+              "name": "Sentadilla búlgara",
+              "sets": "5 x 8/lado",
+              "detail": "Baja en 3 segundos controlados.",
+              "why": "Posición de pie asimétrica en las estriberas",
+              "completed": false
+            },
+            {
+              "id": "ex-2-2",
+              "name": "Hip thrust",
+              "sets": "4 x 12",
+              "detail": "Pausa de 2 segundos arriba apretando.",
+              "why": "Motor principal al ir de pie sobre baches",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "day-3",
+          "label": "Jue",
+          "name": "Jueves",
+          "title": "Descanso activo",
+          "focus": "Recuperación de tejidos",
+          "warmup": "",
+          "cool": "",
+          "completed": false,
+          "trainingTime": "10:00",
+          "exercises": [
+            {
+              "id": "ex-3-1",
+              "name": "Foam roller completo",
+              "sets": "12 min",
+              "detail": "Cuádriceps, glúteos y dorsal.",
+              "why": "Liberar tensión muscular acumulada",
+              "completed": false
+            },
+            {
+              "id": "ex-3-2",
+              "name": "Box breathing",
+              "sets": "5 min",
+              "detail": "Inhala 4s, retén 4s, exhala 4s, retén 4s.",
+              "why": "Recuperación del sistema nervioso central",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "day-4",
+          "label": "Vie",
+          "name": "Viernes",
+          "title": "Core dinámico",
+          "focus": "Superficies inestables",
+          "warmup": "Movilidad torácica, rotación con palo",
+          "cool": "Estiramiento flexor de cadera",
+          "completed": false,
+          "trainingTime": "17:30",
+          "exercises": [
+            {
+              "id": "ex-4-1",
+              "name": "Landmine press",
+              "sets": "4 x 10/lado",
+              "detail": "Empuje diagonal de pie a un brazo.",
+              "why": "Estabilidad asimétrica en el manillar",
+              "completed": false
+            },
+            {
+              "id": "ex-4-2",
+              "name": "Suitcase carry",
+              "sets": "4 x 40m/lado",
+              "detail": "Carga a un solo lado. Torso vertical.",
+              "why": "Control de inercias laterales al tumbar",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "day-5",
+          "label": "Sáb",
+          "name": "Sábado",
+          "title": "Práctica en Moto",
+          "focus": "Técnica y resistencia específica",
+          "warmup": "Movilidad general antes de casco (muñecas, cuello)",
+          "cool": "Hidratación profunda, estiramiento antebrazos",
+          "completed": false,
+          "trainingTime": "09:30",
+          "exercises": [
+            {
+              "id": "ex-5-1",
+              "name": "Drills de equilibrio",
+              "sets": "20 min",
+              "detail": "Concentración en postura y control de embrague.",
+              "why": "Base del control y balance a baja velocidad",
+              "completed": false
+            },
+            {
+              "id": "ex-5-2",
+              "name": "Manga de resistencia",
+              "sets": "40 min",
+              "detail": "80% de pulsaciones fluidas.",
+              "why": "Simula el esfuerzo continuo de carrera o ruta",
+              "completed": false
+            }
+          ]
+        },
+        {
+          "id": "day-6",
+          "label": "Dom",
+          "name": "Domingo",
+          "title": "Recuperación activa",
+          "focus": "Regeneración y movilidad",
+          "warmup": "Paseo muy suave o caminata",
+          "cool": "Preparación del equipo para la semana",
+          "completed": false,
+          "trainingTime": "10:30",
+          "exercises": [
+            {
+              "id": "ex-6-1",
+              "name": "Yoga para riders",
+              "sets": "15 min",
+              "detail": "Perro boca abajo, postura de niño.",
+              "why": "Revierte postura encogida al ir en moto",
+              "completed": false
+            }
+          ]
+        }
+      ]
+    },
+    "meals": {
+      "Lunes": {
+        "desayuno": {
+          "id": "d-Lunes",
+          "name": "Avena caliente con frutos rojos y almendras",
+          "calories": 350,
+          "protein": 12,
+          "carbs": 55,
+          "fat": 8,
+          "completed": false
+        },
+        "almuerzo": {
+          "id": "a-Lunes",
+          "name": "Pollo a la plancha con arroz integral y brócoli",
+          "calories": 580,
+          "protein": 42,
+          "carbs": 45,
+          "fat": 15,
+          "completed": false
+        },
+        "merienda": {
+          "id": "m-Lunes",
+          "name": "Yogur griego con nueces y una manzana",
+          "calories": 220,
+          "protein": 18,
+          "carbs": 15,
+          "fat": 10,
+          "completed": false
+        },
+        "cena": {
+          "id": "c-Lunes",
+          "name": "Salmón al horno con espárragos trileros",
+          "calories": 450,
+          "protein": 35,
+          "carbs": 20,
+          "fat": 12,
+          "completed": false
+        }
       },
-      "almuerzo": {
-        "id": "a-Lunes",
-        "name": "Pollo a la plancha con arroz integral y brócoli",
-        "calories": 580,
-        "protein": 42,
-        "carbs": 45,
-        "fat": 15,
-        "completed": false
+      "Martes": {
+        "desayuno": {
+          "id": "d-Martes",
+          "name": "Avena caliente con frutos rojos y almendras",
+          "calories": 350,
+          "protein": 12,
+          "carbs": 55,
+          "fat": 8,
+          "completed": false
+        },
+        "almuerzo": {
+          "id": "a-Martes",
+          "name": "Pollo a la plancha con arroz integral y brócoli",
+          "calories": 580,
+          "protein": 42,
+          "carbs": 45,
+          "fat": 15,
+          "completed": false
+        },
+        "merienda": {
+          "id": "m-Martes",
+          "name": "Yogur griego con nueces y una manzana",
+          "calories": 220,
+          "protein": 18,
+          "carbs": 15,
+          "fat": 10,
+          "completed": false
+        },
+        "cena": {
+          "id": "c-Martes",
+          "name": "Salmón al horno con espárragos trileros",
+          "calories": 450,
+          "protein": 35,
+          "carbs": 20,
+          "fat": 12,
+          "completed": false
+        }
       },
-      "merienda": {
-        "id": "m-Lunes",
-        "name": "Yogur griego con nueces y una manzana",
-        "calories": 220,
-        "protein": 18,
-        "carbs": 15,
-        "fat": 10,
-        "completed": false
+      "Miércoles": {
+        "desayuno": {
+          "id": "d-Miércoles",
+          "name": "Avena caliente con frutos rojos y almendras",
+          "calories": 350,
+          "protein": 12,
+          "carbs": 55,
+          "fat": 8,
+          "completed": false
+        },
+        "almuerzo": {
+          "id": "a-Miércoles",
+          "name": "Pollo a la plancha con arroz integral y brócoli",
+          "calories": 580,
+          "protein": 42,
+          "carbs": 45,
+          "fat": 15,
+          "completed": false
+        },
+        "merienda": {
+          "id": "m-Miércoles",
+          "name": "Yogur griego con nueces y una manzana",
+          "calories": 220,
+          "protein": 18,
+          "carbs": 15,
+          "fat": 10,
+          "completed": false
+        },
+        "cena": {
+          "id": "c-Miércoles",
+          "name": "Salmón al horno con espárragos trileros",
+          "calories": 450,
+          "protein": 35,
+          "carbs": 20,
+          "fat": 12,
+          "completed": false
+        }
       },
-      "cena": {
-        "id": "c-Lunes",
-        "name": "Salmón al horno con espárragos trileros",
-        "calories": 450,
-        "protein": 35,
-        "carbs": 20,
-        "fat": 12,
-        "completed": false
+      "Jueves": {
+        "desayuno": {
+          "id": "d-Jueves",
+          "name": "Avena caliente con frutos rojos y almendras",
+          "calories": 350,
+          "protein": 12,
+          "carbs": 55,
+          "fat": 8,
+          "completed": false
+        },
+        "almuerzo": {
+          "id": "a-Jueves",
+          "name": "Pollo a la plancha con arroz integral y brócoli",
+          "calories": 580,
+          "protein": 42,
+          "carbs": 45,
+          "fat": 15,
+          "completed": false
+        },
+        "merienda": {
+          "id": "m-Jueves",
+          "name": "Yogur griego con nueces y una manzana",
+          "calories": 220,
+          "protein": 18,
+          "carbs": 15,
+          "fat": 10,
+          "completed": false
+        },
+        "cena": {
+          "id": "c-Jueves",
+          "name": "Salmón al horno con espárragos trileros",
+          "calories": 450,
+          "protein": 35,
+          "carbs": 20,
+          "fat": 12,
+          "completed": false
+        }
+      },
+      "Viernes": {
+        "desayuno": {
+          "id": "d-Viernes",
+          "name": "Avena caliente con frutos rojos y almendras",
+          "calories": 350,
+          "protein": 12,
+          "carbs": 55,
+          "fat": 8,
+          "completed": false
+        },
+        "almuerzo": {
+          "id": "a-Viernes",
+          "name": "Pollo a la plancha con arroz integral y brócoli",
+          "calories": 580,
+          "protein": 42,
+          "carbs": 45,
+          "fat": 15,
+          "completed": false
+        },
+        "merienda": {
+          "id": "m-Viernes",
+          "name": "Yogur griego con nueces y una manzana",
+          "calories": 220,
+          "protein": 18,
+          "carbs": 15,
+          "fat": 10,
+          "completed": false
+        },
+        "cena": {
+          "id": "c-Viernes",
+          "name": "Salmón al horno con espárragos trileros",
+          "calories": 450,
+          "protein": 35,
+          "carbs": 20,
+          "fat": 12,
+          "completed": false
+        }
+      },
+      "Sábado": {
+        "desayuno": {
+          "id": "d-Sábado",
+          "name": "Avena caliente con frutos rojos y almendras",
+          "calories": 350,
+          "protein": 12,
+          "carbs": 55,
+          "fat": 8,
+          "completed": false
+        },
+        "almuerzo": {
+          "id": "a-Sábado",
+          "name": "Pollo a la plancha con arroz integral y brócoli",
+          "calories": 580,
+          "protein": 42,
+          "carbs": 45,
+          "fat": 15,
+          "completed": false
+        },
+        "merienda": {
+          "id": "m-Sábado",
+          "name": "Yogur griego con nueces y una manzana",
+          "calories": 220,
+          "protein": 18,
+          "carbs": 15,
+          "fat": 10,
+          "completed": false
+        },
+        "cena": {
+          "id": "c-Sábado",
+          "name": "Salmón al horno con espárragos trileros",
+          "calories": 450,
+          "protein": 35,
+          "carbs": 20,
+          "fat": 12,
+          "completed": false
+        }
+      },
+      "Domingo": {
+        "desayuno": {
+          "id": "d-Domingo",
+          "name": "Avena caliente con frutos rojos y almendras",
+          "calories": 350,
+          "protein": 12,
+          "carbs": 55,
+          "fat": 8,
+          "completed": false
+        },
+        "almuerzo": {
+          "id": "a-Domingo",
+          "name": "Pollo a la plancha con arroz integral y brócoli",
+          "calories": 580,
+          "protein": 42,
+          "carbs": 45,
+          "fat": 15,
+          "completed": false
+        },
+        "merienda": {
+          "id": "m-Domingo",
+          "name": "Yogur griego con nueces y una manzana",
+          "calories": 220,
+          "protein": 18,
+          "carbs": 15,
+          "fat": 10,
+          "completed": false
+        },
+        "cena": {
+          "id": "c-Domingo",
+          "name": "Salmón al horno con espárragos trileros",
+          "calories": 450,
+          "protein": 35,
+          "carbs": 20,
+          "fat": 12,
+          "completed": false
+        }
       }
     },
-    "Martes": {
-      "desayuno": {
-        "id": "d-Martes",
-        "name": "Avena caliente con frutos rojos y almendras",
-        "calories": 350,
-        "protein": 12,
-        "carbs": 55,
-        "fat": 8,
-        "completed": false
+    "calorieTarget": 2100,
+    "waterLog": {
+      "Lunes": 0,
+      "Martes": 0,
+      "Miércoles": 0,
+      "Jueves": 0,
+      "Viernes": 0,
+      "Sábado": 0,
+      "Domingo": 0
+    },
+    "transactions": [
+      {
+        "id": "tx-1784083066953",
+        "title": "ddds",
+        "amount": 222222,
+        "type": "gasto",
+        "category": "Ocio",
+        "date": "2026-07-15"
       },
-      "almuerzo": {
-        "id": "a-Martes",
-        "name": "Pollo a la plancha con arroz integral y brócoli",
-        "calories": 580,
-        "protein": 42,
-        "carbs": 45,
-        "fat": 15,
-        "completed": false
+      {
+        "id": "t-1",
+        "title": "Sueldo Mensual Recibido",
+        "amount": 1600,
+        "type": "ingreso",
+        "category": "Sueldo",
+        "date": "2026-05-25"
       },
-      "merienda": {
-        "id": "m-Martes",
-        "name": "Yogur griego con nueces y una manzana",
-        "calories": 220,
-        "protein": 18,
-        "carbs": 15,
-        "fat": 10,
-        "completed": false
+      {
+        "id": "t-2",
+        "title": "Compra de víveres saludables",
+        "amount": 110.5,
+        "type": "gasto",
+        "category": "Comida",
+        "date": "2026-05-26"
       },
-      "cena": {
-        "id": "c-Martes",
-        "name": "Salmón al horno con espárragos trileros",
-        "calories": 450,
-        "protein": 35,
-        "carbs": 20,
-        "fat": 12,
-        "completed": false
+      {
+        "id": "t-3",
+        "title": "Pago gimnasio mensual",
+        "amount": 45,
+        "type": "gasto",
+        "category": "Gimnasio",
+        "date": "2026-05-26"
+      },
+      {
+        "id": "t-4",
+        "title": "Cena saludable fuera",
+        "amount": 35,
+        "type": "gasto",
+        "category": "Ocio",
+        "date": "2026-05-27"
       }
-    },
-    "Miércoles": {
-      "desayuno": {
-        "id": "d-Miércoles",
-        "name": "Avena caliente con frutos rojos y almendras",
-        "calories": 350,
-        "protein": 12,
-        "carbs": 55,
-        "fat": 8,
-        "completed": false
-      },
-      "almuerzo": {
-        "id": "a-Miércoles",
-        "name": "Pollo a la plancha con arroz integral y brócoli",
-        "calories": 580,
-        "protein": 42,
-        "carbs": 45,
-        "fat": 15,
-        "completed": false
-      },
-      "merienda": {
-        "id": "m-Miércoles",
-        "name": "Yogur griego con nueces y una manzana",
-        "calories": 220,
-        "protein": 18,
-        "carbs": 15,
-        "fat": 10,
-        "completed": false
-      },
-      "cena": {
-        "id": "c-Miércoles",
-        "name": "Salmón al horno con espárragos trileros",
-        "calories": 450,
-        "protein": 35,
-        "carbs": 20,
-        "fat": 12,
-        "completed": false
-      }
-    },
-    "Jueves": {
-      "desayuno": {
-        "id": "d-Jueves",
-        "name": "Avena caliente con frutos rojos y almendras",
-        "calories": 350,
-        "protein": 12,
-        "carbs": 55,
-        "fat": 8,
-        "completed": false
-      },
-      "almuerzo": {
-        "id": "a-Jueves",
-        "name": "Pollo a la plancha con arroz integral y brócoli",
-        "calories": 580,
-        "protein": 42,
-        "carbs": 45,
-        "fat": 15,
-        "completed": false
-      },
-      "merienda": {
-        "id": "m-Jueves",
-        "name": "Yogur griego con nueces y una manzana",
-        "calories": 220,
-        "protein": 18,
-        "carbs": 15,
-        "fat": 10,
-        "completed": false
-      },
-      "cena": {
-        "id": "c-Jueves",
-        "name": "Salmón al horno con espárragos trileros",
-        "calories": 450,
-        "protein": 35,
-        "carbs": 20,
-        "fat": 12,
-        "completed": false
-      }
-    },
-    "Viernes": {
-      "desayuno": {
-        "id": "d-Viernes",
-        "name": "Avena caliente con frutos rojos y almendras",
-        "calories": 350,
-        "protein": 12,
-        "carbs": 55,
-        "fat": 8,
-        "completed": false
-      },
-      "almuerzo": {
-        "id": "a-Viernes",
-        "name": "Pollo a la plancha con arroz integral y brócoli",
-        "calories": 580,
-        "protein": 42,
-        "carbs": 45,
-        "fat": 15,
-        "completed": false
-      },
-      "merienda": {
-        "id": "m-Viernes",
-        "name": "Yogur griego con nueces y una manzana",
-        "calories": 220,
-        "protein": 18,
-        "carbs": 15,
-        "fat": 10,
-        "completed": false
-      },
-      "cena": {
-        "id": "c-Viernes",
-        "name": "Salmón al horno con espárragos trileros",
-        "calories": 450,
-        "protein": 35,
-        "carbs": 20,
-        "fat": 12,
-        "completed": false
-      }
-    },
-    "Sábado": {
-      "desayuno": {
-        "id": "d-Sábado",
-        "name": "Avena caliente con frutos rojos y almendras",
-        "calories": 350,
-        "protein": 12,
-        "carbs": 55,
-        "fat": 8,
-        "completed": false
-      },
-      "almuerzo": {
-        "id": "a-Sábado",
-        "name": "Pollo a la plancha con arroz integral y brócoli",
-        "calories": 580,
-        "protein": 42,
-        "carbs": 45,
-        "fat": 15,
-        "completed": false
-      },
-      "merienda": {
-        "id": "m-Sábado",
-        "name": "Yogur griego con nueces y una manzana",
-        "calories": 220,
-        "protein": 18,
-        "carbs": 15,
-        "fat": 10,
-        "completed": false
-      },
-      "cena": {
-        "id": "c-Sábado",
-        "name": "Salmón al horno con espárragos trileros",
-        "calories": 450,
-        "protein": 35,
-        "carbs": 20,
-        "fat": 12,
-        "completed": false
-      }
-    },
-    "Domingo": {
-      "desayuno": {
-        "id": "d-Domingo",
-        "name": "Avena caliente con frutos rojos y almendras",
-        "calories": 350,
-        "protein": 12,
-        "carbs": 55,
-        "fat": 8,
-        "completed": false
-      },
-      "almuerzo": {
-        "id": "a-Domingo",
-        "name": "Pollo a la plancha con arroz integral y brócoli",
-        "calories": 580,
-        "protein": 42,
-        "carbs": 45,
-        "fat": 15,
-        "completed": false
-      },
-      "merienda": {
-        "id": "m-Domingo",
-        "name": "Yogur griego con nueces y una manzana",
-        "calories": 220,
-        "protein": 18,
-        "carbs": 15,
-        "fat": 10,
-        "completed": false
-      },
-      "cena": {
-        "id": "c-Domingo",
-        "name": "Salmón al horno con espárragos trileros",
-        "calories": 450,
-        "protein": 35,
-        "carbs": 20,
-        "fat": 12,
-        "completed": false
-      }
-    }
-  },
-  "calorieTarget": 2100,
-  "waterLog": {
-    "Lunes": 0,
-    "Martes": 0,
-    "Miércoles": 0,
-    "Jueves": 0,
-    "Viernes": 0,
-    "Sábado": 0,
-    "Domingo": 0
-  },
-  "transactions": [
-    {
-      "id": "tx-1784083066953",
-      "title": "ddds",
-      "amount": 222222,
-      "type": "gasto",
-      "category": "Ocio",
-      "date": "2026-07-15"
-    },
-    {
-      "id": "t-1",
-      "title": "Sueldo Mensual Recibido",
-      "amount": 1600,
-      "type": "ingreso",
-      "category": "Sueldo",
-      "date": "2026-05-25"
-    },
-    {
-      "id": "t-2",
-      "title": "Compra de víveres saludables",
-      "amount": 110.5,
-      "type": "gasto",
-      "category": "Comida",
-      "date": "2026-05-26"
-    },
-    {
-      "id": "t-3",
-      "title": "Pago gimnasio mensual",
-      "amount": 45,
-      "type": "gasto",
-      "category": "Gimnasio",
-      "date": "2026-05-26"
-    },
-    {
-      "id": "t-4",
-      "title": "Cena saludable fuera",
-      "amount": 35,
-      "type": "gasto",
-      "category": "Ocio",
-      "date": "2026-05-27"
-    }
-  ],
-  "security_username": "admin",
-  "security_password_hash": "vitalisesalt1234:ef09c87d33f145463c01676da372b245575f009594fc95164d60b0630452936b",
-  "security_enabled": true,
-  "savingsGoal": 10000
+    ],
+    "savingsGoal": 10000
+  }
 }
