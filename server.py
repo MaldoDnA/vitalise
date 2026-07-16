@@ -720,6 +720,9 @@ HTML_CONTENT = """<!DOCTYPE html>
                     <button onclick="switchTab('finances')" id="tab-finances" class="flex-1 sm:flex-initial px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all text-slate-400 hover:text-white">
                         <i data-lucide="wallet" class="w-3.5 h-3.5"></i> Finanzas
                     </button>
+                    <button onclick="switchTab('profile')" id="tab-profile" class="flex-1 sm:flex-initial px-3 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all text-slate-400 hover:text-white">
+                        <i data-lucide="user" class="w-3.5 h-3.5"></i> Perfil
+                    </button>
                 </nav>
                 
                 <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
@@ -1213,6 +1216,164 @@ HTML_CONTENT = """<!DOCTYPE html>
         </div>
     </div>
 
+    <!-- 4. PROFILE SECTION -->
+        <div id="section-profile" class="tab-content space-y-6 hidden">
+            <!-- Profile Header Card -->
+            <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-[#185FA5]/10 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-40 h-40 bg-[#185FA5]/10 rounded-full blur-3xl"></div>
+                <div class="flex flex-col md:flex-row items-center gap-6 relative z-10">
+                    <!-- Profile Picture / Badge -->
+                    <div class="w-20 h-20 bg-gradient-to-br from-[#185FA5] to-blue-600 rounded-2xl flex items-center justify-center text-3xl font-black text-white uppercase shadow-lg border border-blue-450 tracking-wider font-display" id="profile-avatar-badge">
+                        A
+                    </div>
+                    
+                    <!-- User Details -->
+                    <div class="text-center md:text-left space-y-2 flex-1">
+                        <div class="flex flex-col md:flex-row md:items-center gap-2 justify-center md:justify-start">
+                            <h2 class="text-2xl font-black text-white font-display tracking-wide" id="profile-username-title">Admin</h2>
+                            <span class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 self-center">Rider Pro</span>
+                        </div>
+                        <p class="text-xs text-slate-400 font-medium">Miembro desde: <span class="text-slate-300 font-bold" id="profile-joined-date">Julio 2026</span></p>
+                        
+                        <!-- Mini Badges Row -->
+                        <div class="flex flex-wrap gap-2 justify-center md:justify-start pt-1">
+                            <div class="px-3 py-1 bg-slate-950/80 border border-slate-850 rounded-lg text-[10px] text-slate-300 flex items-center gap-1.5">
+                                <i data-lucide="dumbbell" class="w-3.5 h-3.5 text-blue-400"></i>
+                                Nivel: <span class="font-bold text-white" id="profile-stat-level">Avanzado</span>
+                            </div>
+                            <div class="px-3 py-1 bg-slate-950/80 border border-slate-850 rounded-lg text-[10px] text-slate-300 flex items-center gap-1.5">
+                                <i data-lucide="target" class="w-3.5 h-3.5 text-rose-400"></i>
+                                Enfoque: <span class="font-bold text-white" id="profile-stat-objective">Enduro</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Global Progress circle/meter -->
+                    <div class="bg-slate-950/50 border border-slate-800/80 rounded-2xl p-4 flex items-center gap-4 text-left">
+                        <div class="space-y-1">
+                            <p class="text-[9px] font-bold uppercase tracking-wider text-slate-500">Rendimiento Semanal</p>
+                            <p class="text-2xl font-black text-emerald-400 font-display tracking-tight" id="profile-global-perf">85%</p>
+                            <p class="text-[10px] text-slate-400">Ejercicios completados</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full border-4 border-slate-800 border-t-emerald-400 flex items-center justify-center text-xs font-bold text-slate-200" id="profile-perf-spinner">
+                            85%
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats & Analytics Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Left Column: Summary and Goals Cards -->
+                <div class="lg:col-span-4 space-y-6">
+                    <!-- Achievements & Streaks Card -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 shadow-xl space-y-4">
+                        <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5 font-display border-b border-slate-800 pb-2.5">
+                            <i data-lucide="trophy" class="w-4 h-4 text-amber-500"></i> Logros y Rachas
+                        </h3>
+                        
+                        <div class="space-y-3 text-xs">
+                            <div class="flex items-center gap-3 p-2.5 bg-slate-950/40 border border-slate-850 rounded-xl">
+                                <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                                    <i data-lucide="droplet" class="w-4 h-4"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-bold text-white">Hidratación Constante</p>
+                                    <p class="text-[10px] text-slate-400" id="profile-streak-water">Meta diaria de agua alcanzada 5 veces</p>
+                                </div>
+                            </div>
+                            
+                            <div class="flex items-center gap-3 p-2.5 bg-slate-950/40 border border-slate-850 rounded-xl">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                    <i data-lucide="zap" class="w-4 h-4"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-bold text-white">Disciplina Deportiva</p>
+                                    <p class="text-[10px] text-slate-400" id="profile-streak-workouts">Días entrenados esta semana</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-3 p-2.5 bg-slate-950/40 border border-slate-850 rounded-xl">
+                                <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                                    <i data-lucide="piggy-bank" class="w-4 h-4"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="font-bold text-white">Ahorro Activo</p>
+                                    <p class="text-[10px] text-slate-400" id="profile-streak-finance">Salud financiera excelente</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Daily Target Card -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 shadow-xl space-y-4">
+                        <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5 font-display border-b border-slate-800 pb-2.5">
+                            <i data-lucide="target" class="w-4 h-4 text-rose-500"></i> Objetivos Diarios
+                        </h3>
+                        
+                        <div class="space-y-4">
+                            <!-- Water Goal -->
+                            <div class="space-y-1 text-xs">
+                                <div class="flex justify-between font-bold">
+                                    <span class="text-slate-400">Consumo de Agua</span>
+                                    <span class="text-white" id="profile-daily-water-txt">0 / 2500 ml</span>
+                                </div>
+                                <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-850">
+                                    <div class="bg-sky-500 h-full rounded-full transition-all duration-500" id="profile-daily-water-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Calorie Goal -->
+                            <div class="space-y-1 text-xs">
+                                <div class="flex justify-between font-bold">
+                                    <span class="text-slate-400">Límite Calórico Diario</span>
+                                    <span class="text-white" id="profile-daily-calories-txt">0 / 2100 kcal</span>
+                                </div>
+                                <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-850">
+                                    <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" id="profile-daily-calories-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <!-- Savings progress -->
+                            <div class="space-y-1 text-xs">
+                                <div class="flex justify-between font-bold">
+                                    <span class="text-slate-400">Meta de Ahorro</span>
+                                    <span class="text-white" id="profile-savings-txt">$0 / $10,000</span>
+                                </div>
+                                <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-850">
+                                    <div class="bg-blue-500 h-full rounded-full transition-all duration-500" id="profile-savings-bar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: Charts & Analysis -->
+                <div class="lg:col-span-8 space-y-6">
+                    <!-- Progress charts container -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 shadow-xl space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                            <h3 class="text-xs font-black text-white uppercase tracking-wider flex items-center gap-1.5 font-display">
+                                <i data-lucide="line-chart" class="w-4 h-4 text-indigo-500"></i> Avances y Métricas en el Tiempo
+                            </h3>
+                            
+                            <!-- Chart selector controls -->
+                            <div class="flex bg-slate-950 p-0.5 rounded-lg border border-slate-850 items-center text-[10px] font-bold">
+                                <button onclick="switchProfileChart('water')" id="btn-chart-water" class="px-2.5 py-1 rounded bg-[#185FA5] text-white transition-all">Hidratación</button>
+                                <button onclick="switchProfileChart('nutrition')" id="btn-chart-nutrition" class="px-2.5 py-1 rounded text-slate-400 hover:text-white transition-all">Nutrición</button>
+                                <button onclick="switchProfileChart('routine')" id="btn-chart-routine" class="px-2.5 py-1 rounded text-slate-400 hover:text-white transition-all">Entrenamiento</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Chart container -->
+                        <div class="h-64 sm:h-72 w-full relative">
+                            <canvas id="profileProgressChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     <!-- AI Meals Generator Dialog Modal -->
     <div id="ai-meals-modal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
         <div class="bg-slate-900 border border-slate-800 max-w-md w-full rounded-2xl shadow-2xl p-5 md:p-6 space-y-4">
@@ -1580,6 +1741,7 @@ HTML_CONTENT = """<!DOCTYPE html>
             if (tabId === 'workouts') renderWorkoutsView();
             if (tabId === 'meals') renderMealsView();
             if (tabId === 'finances') renderFinancesView();
+            if (tabId === 'profile') renderProfileView();
             lucide.createIcons();
         }
 
@@ -1620,6 +1782,186 @@ HTML_CONTENT = """<!DOCTYPE html>
                 btn.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i> <span class="hidden sm:inline">Guardar Estado</span>`;
                 lucide.createIcons();
             }
+        }
+
+
+        // ==========================================
+        // PROFILE CONTROLLERS & GRAPHICS
+        // ==========================================
+        let activeProfileChartTab = 'water';
+        let profileChartInstance = null;
+
+        function switchProfileChart(tabId) {
+            activeProfileChartTab = tabId;
+            document.querySelectorAll('[id^="btn-chart-"]').forEach(btn => {
+                btn.className = "px-2.5 py-1 rounded text-slate-400 hover:text-white transition-all";
+            });
+            document.getElementById(`btn-chart-${tabId}`).className = "px-2.5 py-1 rounded bg-[#185FA5] text-white transition-all";
+            renderProfileChart();
+        }
+
+        function renderProfileView() {
+            const token = localStorage.getItem('app_auth_token') || "";
+            const username = token.split(':')[0] || "Admin";
+            
+            document.getElementById('profile-username-title').innerText = username;
+            document.getElementById('profile-avatar-badge').innerText = username.charAt(0).toUpperCase();
+            
+            const level = state.routine.level || "Avanzado";
+            const objective = state.routine.objective || "Rendimiento";
+            document.getElementById('profile-stat-level').innerText = level;
+            document.getElementById('profile-stat-objective').innerText = objective;
+            
+            const days = state.routine.days || [];
+            const totalAllExercises = days.reduce((acc, d) => acc + d.exercises.length, 0);
+            const completedAllExercises = days.reduce((acc, d) => acc + d.exercises.filter(e => e.completed).length, 0);
+            const overallPerformance = totalAllExercises > 0 ? Math.round((completedAllExercises / totalAllExercises) * 100) : 0;
+            
+            document.getElementById('profile-global-perf').innerText = `${overallPerformance}%`;
+            document.getElementById('profile-perf-spinner').innerText = `${overallPerformance}%`;
+            document.getElementById('profile-perf-spinner').style.borderTopColor = overallPerformance >= 80 ? '#34d399' : '#3b82f6';
+            
+            const completedWaterDays = Object.values(state.waterLog || {}).filter(ml => ml >= 2000).length;
+            document.getElementById('profile-streak-water').innerText = `Meta diaria de agua alcanzada ${completedWaterDays} de 7 días.`;
+            
+            const trainingDaysCount = days.filter(d => d.exercises.some(e => e.completed)).length;
+            document.getElementById('profile-streak-workouts').innerText = `Entrenaste ${trainingDaysCount} de 7 días de rutina.`;
+            
+            let financeRating = "Excelente";
+            const totalIncome = state.transactions.filter(t => t.type === 'ingreso').reduce((acc, t) => acc + Number(t.amount), 0);
+            const totalExpense = state.transactions.filter(t => t.type === 'gasto').reduce((acc, t) => acc + Number(t.amount), 0);
+            const balance = totalIncome - totalExpense;
+            if (balance < 0) financeRating = "Con déficit";
+            else if (totalIncome > 0 && (totalExpense / totalIncome) > 0.8) financeRating = "Ajustada";
+            document.getElementById('profile-streak-finance').innerText = `Salud financiera: ${financeRating}.`;
+
+            const currentDayOfWeekIdx = (new Date().getDay() + 6) % 7;
+            const todayName = DAYS_NAMES[currentDayOfWeekIdx];
+            const todayWater = (state.waterLog && state.waterLog[todayName]) || 0;
+            const waterPct = Math.min(100, Math.round((todayWater / 2500) * 100));
+            document.getElementById('profile-daily-water-txt').innerText = `${todayWater} / 2500 ml`;
+            document.getElementById('profile-daily-water-bar').style.width = `${waterPct}%`;
+            
+            let todayCalories = 0;
+            const todayMeals = (state.meals && state.meals[todayName]) || {};
+            Object.values(todayMeals).forEach(m => {
+                if (m && m.completed && m.calories) {
+                    todayCalories += Number(m.calories);
+                }
+            });
+            const calPct = Math.min(100, Math.round((todayCalories / state.calorieTarget) * 100));
+            document.getElementById('profile-daily-calories-txt').innerText = `${todayCalories} / ${state.calorieTarget} kcal`;
+            document.getElementById('profile-daily-calories-bar').style.width = `${calPct}%`;
+            
+            const savingsGoal = state.savingsGoal || 1000;
+            const savingsPct = Math.min(100, Math.round((Math.max(0, balance) / savingsGoal) * 100));
+            document.getElementById('profile-savings-txt').innerText = `$${Math.max(0, Math.round(balance))} / $${savingsGoal}`;
+            document.getElementById('profile-savings-bar').style.width = `${savingsPct}%`;
+            
+            renderProfileChart();
+        }
+
+        function renderProfileChart() {
+            const ctx = document.getElementById('profileProgressChart').getContext('2d');
+            if (profileChartInstance) profileChartInstance.destroy();
+            
+            let chartType = 'line';
+            let chartData = {};
+            let chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: { color: '#94a3b8', font: { size: 10 } }
+                    }
+                },
+                scales: {
+                    x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', font: { size: 10 } } },
+                    y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8', font: { size: 10 } } }
+                }
+            };
+            
+            if (activeProfileChartTab === 'water') {
+                chartType = 'line';
+                const labels = DAYS_NAMES;
+                const dataVals = labels.map(day => (state.waterLog && state.waterLog[day]) || 0);
+                chartData = {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Agua consumida (ml)',
+                        data: dataVals,
+                        borderColor: '#0284c7',
+                        backgroundColor: 'rgba(2, 132, 199, 0.15)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2,
+                        pointBackgroundColor: '#38bdf8'
+                    }]
+                };
+            } 
+            else if (activeProfileChartTab === 'nutrition') {
+                chartType = 'doughnut';
+                
+                let protein = 0;
+                let carbs = 0;
+                let fat = 0;
+                
+                Object.values(state.meals || {}).forEach(dayMeals => {
+                    Object.values(dayMeals).forEach(meal => {
+                        if (meal && meal.completed) {
+                            protein += meal.protein ? Number(meal.protein) : 0;
+                            carbs += meal.carbs ? Number(meal.carbs) : 0;
+                            fat += meal.fat ? Number(meal.fat) : 0;
+                        }
+                    });
+                });
+                
+                if (protein === 0 && carbs === 0 && fat === 0) {
+                    protein = 120;
+                    carbs = 200;
+                    fat = 60;
+                }
+                
+                chartData = {
+                    labels: ['Proteínas (g)', 'Carbohidratos (g)', 'Grasas (g)'],
+                    datasets: [{
+                        data: [protein, carbs, fat],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 1,
+                        borderColor: '#0f172a'
+                    }]
+                };
+                
+                chartOptions.scales = {};
+            }
+            else if (activeProfileChartTab === 'routine') {
+                chartType = 'bar';
+                const labels = DAYS_NAMES;
+                const dataVals = (state.routine.days || []).map(day => {
+                    const tot = day.exercises.length;
+                    const comp = day.exercises.filter(e => e.completed).length;
+                    return tot > 0 ? Math.round((comp / tot) * 100) : 0;
+                });
+                
+                chartData = {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Ejercicios Completados (%)',
+                        data: dataVals,
+                        backgroundColor: '#185FA5',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1.5,
+                        borderRadius: 5
+                    }]
+                };
+            }
+            
+            profileChartInstance = new Chart(ctx, {
+                type: chartType,
+                data: chartData,
+                options: chartOptions
+            });
         }
 
 
