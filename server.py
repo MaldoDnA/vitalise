@@ -687,6 +687,12 @@ HTML_CONTENT = """<!DOCTYPE html>
                     <i data-lucide="user-plus" class="w-4 h-4"></i> Crear Cuenta
                 </button>
             </div>
+            
+            <!-- Connection status indicator -->
+            <div class="pt-4 flex items-center justify-center gap-1.5 text-[10px] text-slate-500 font-mono border-t border-slate-850/50 mt-4">
+                <span class="w-1.5 h-1.5 rounded-full bg-slate-500 animate-pulse" id="db-status-dot"></span>
+                <span id="db-status-text">Comprobando base de datos...</span>
+            </div>
         </div>
     </div>
 
@@ -1675,6 +1681,7 @@ HTML_CONTENT = """<!DOCTYPE html>
                 const authStatus = await statusRes.json();
                 
                 updateSecurityStatusUI(authStatus.enabled);
+                checkDatabaseStatus();
                 
                 let headers = {};
                 if (authStatus.enabled) {
@@ -3109,10 +3116,38 @@ HTML_CONTENT = """<!DOCTYPE html>
         // SECURITY GATE SYSTEM
         // ==========================================
 
+        async function checkDatabaseStatus() {
+            try {
+                const res = await fetch('/api/db-status');
+                const data = await res.json();
+                const dot = document.getElementById('db-status-dot');
+                const text = document.getElementById('db-status-text');
+                
+                if (!dot || !text) return;
+                
+                if (data.status === 'supabase') {
+                    dot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]";
+                    text.innerText = "Base de datos: Conectada (Supabase)";
+                    text.className = "text-emerald-400 font-bold";
+                } else if (data.status === 'error') {
+                    dot.className = "w-1.5 h-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(239,68,68,0.6)] animate-pulse";
+                    text.innerText = "Base de datos: Error de Conexión";
+                    text.className = "text-rose-400 font-bold";
+                } else {
+                    dot.className = "w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)] animate-pulse";
+                    text.innerText = "Base de datos: Almacenamiento Local (Efímero)";
+                    text.className = "text-amber-500/80 font-bold";
+                }
+            } catch (e) {
+                console.error("No se pudo comprobar el estado de la base de datos:", e);
+            }
+        }
+
         function showLockScreen() {
             document.getElementById('lock-screen-container').classList.remove('hidden');
             document.getElementById('app-wrapper').classList.add('hidden');
             toggleLockTab('login'); // Always default to login tab
+            checkDatabaseStatus();
             lucide.createIcons();
         }
 
@@ -3440,6 +3475,20 @@ class WorkoutAppHandler(SimpleHTTPRequestHandler):
             else:
                 self.send_response(404)
                 self.end_headers()
+        elif self.path == '/api/db-status':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            db_conn = get_db_connection()
+            if db_conn:
+                try:
+                    db_conn.close()
+                    status = "supabase"
+                except Exception:
+                    status = "error"
+            else:
+                status = "local"
+            self.wfile.write(json.dumps({"status": status}).encode('utf-8'))
         elif self.path == '/api/auth/status':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
